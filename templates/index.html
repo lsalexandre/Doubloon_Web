@@ -3,24 +3,62 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doubloon System - Web</title>
+    <title>Doubloon System - Arsenal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Pirata+One&display=swap" rel="stylesheet">
-    
     <style>
         .font-pirata { font-family: 'Pirata One', cursive; }
     </style>
 </head>
-<body class="bg-[#121212] text-white min-h-screen flex flex-col items-center justify-center">
+<body class="bg-[#121212] text-white p-4 md:p-10 min-h-screen">
 
-    <div class="text-center">
-        <h1 class="text-6xl font-pirata text-[#00A19B] mb-4">DOUBLOON SYSTEM</h1>
-        <p class="text-[#A5ACB0] text-xl italic">"Navegando pelos Mares do Inventário Online"</p>
-        
-        <div class="mt-10 p-6 bg-[#1A1A1A] border-2 border-[#00A19B] rounded-lg shadow-2xl">
-            <p class="text-lg">⚓ O Porto de **Vacaria** está Online!</p>
-            <p class="text-sm text-gray-500 mt-2">Ambiente de Teste - Fase 1 (ADS)</p>
+    <div class="max-w-5xl mx-auto">
+        <h1 class="text-5xl font-pirata text-[#00A19B] mb-8 text-center uppercase tracking-widest">
+            Inventário do Galeão
+        </h1>
+
+        <div class="mb-10 p-6 bg-[#1A1A1A] border border-gray-700 rounded-lg shadow-2xl">
+            <h2 class="text-[#00A19B] font-pirata text-2xl mb-4 italic">⚓ Adicionar ao Arsenal</h2>
+            <form action="/adicionar" method="POST" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <input type="text" name="nome" placeholder="Nome do Item" class="bg-[#121212] border border-gray-600 p-2 rounded text-white focus:border-[#00A19B] outline-none" required>
+                <input type="text" name="categoria" placeholder="Categoria" class="bg-[#121212] border border-gray-600 p-2 rounded text-white focus:border-[#00A19B] outline-none">
+                <input type="number" name="quantidade" placeholder="Qtd" class="bg-[#121212] border border-gray-600 p-2 rounded text-white focus:border-[#00A19B] outline-none" required>
+                <button type="submit" class="bg-[#00A19B] text-black font-bold py-2 rounded hover:bg-[#007a75] transition duration-300">
+                    Cadastrar Item
+                </button>
+            </form>
         </div>
+
+        <div class="bg-[#1A1A1A] border border-[#00A19B] rounded-lg overflow-hidden shadow-2xl">
+            <table class="w-full text-left">
+                <thead class="bg-[#00A19B] text-black font-bold uppercase text-sm">
+                    <tr>
+                        <th class="p-4">Item</th>
+                        <th class="p-4 text-center">Categoria</th>
+                        <th class="p-4 text-center">Quantidade</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in itens %}
+                    <tr class="border-b border-gray-800 hover:bg-[#252525] transition duration-200">
+                        <td class="p-4 font-semibold">{{ item.nome }}</td>
+                        <td class="p-4 text-center text-gray-400">{{ item.categoria }}</td>
+                        <td class="p-4 text-center font-mono text-[#00A19B]">{{ item.quantidade }}</td>
+                    </tr>
+                    {% else %}
+                    <tr>
+                        <td colspan="3" class="p-10 text-center text-gray-500 italic">
+                            O arsenal está vazio em Vacaria. Comece a cadastrar acima!
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <p class="text-center mt-10 text-xs text-gray-600 uppercase tracking-tighter">
+            Doubloon System Online | Ambiente de Produção (ADS)
+        </p>
     </div>
 
 </body>
