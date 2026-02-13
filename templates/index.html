@@ -2,68 +2,84 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Doubloon | Aviiva Corporate</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Doubloon System | Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
-    <style>body { font-family: 'Inter', sans-serif; }</style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #0b0e11; color: #e1e1e1; }
+        .sidebar { width: 260px; background-color: #161b22; border-right: 1px solid #30363d; }
+        .nav-link { transition: all 0.3s; border-left: 3px solid transparent; }
+        .nav-link:hover, .nav-link.active { background-color: #1c2128; border-left-color: #00A19B; color: #00A19B; }
+    </style>
 </head>
-<body class="bg-[#0b0e11] text-[#e1e1e1] p-6 md:p-12">
-    <div class="max-w-6xl mx-auto">
-        <header class="flex justify-between items-center mb-10 border-b border-gray-800 pb-6">
-            <h1 class="text-3xl font-bold text-white uppercase tracking-tighter">Aviiva <span class="text-[#00A19B]">System</span></h1>
-            <div class="text-right">
-                <span class="text-[10px] bg-[#00A19B] text-black px-3 py-1 rounded font-bold">{{ role }}</span>
-                <br><a href="/logout" class="text-xs text-gray-500 hover:text-white transition">Sair do Sistema</a>
-            </div>
-        </header>
+<body class="flex min-h-screen">
 
-        <section class="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <form action="/" method="GET" class="md:col-span-2 flex gap-2">
-                <input type="text" name="search" placeholder="Buscar recurso por nome..." class="flex-1 bg-[#161b22] border border-gray-700 p-3 rounded text-sm focus:border-[#00A19B] outline-none">
-                <button type="submit" class="bg-[#00A19B] px-6 rounded font-bold text-black text-xs uppercase">Filtrar</button>
-            </form>
-            <select onchange="window.location.href='/?category='+this.value" class="bg-[#161b22] border border-gray-700 p-3 rounded text-sm">
-                <option value="">Todas as Categorias</option>
-                {% for cat in categories %}
-                <option value="{{ cat[0] }}">{{ cat[0] }}</option>
-                {% endfor %}
-            </select>
-        </section>
-
-        <div class="bg-[#161b22] border border-gray-800 rounded-sm overflow-hidden mb-8">
-            <table class="w-full text-left text-sm">
-                <thead class="bg-[#0d1117] text-gray-500 uppercase text-[10px] font-bold">
-                    <tr><th class="p-5">Ativo</th><th class="p-5">Categoria</th><th class="p-5 text-center">Estoque</th>{% if role == 'Administrator' %}<th class="p-5 text-right">Ações</th>{% endif %}</tr>
-                </thead>
-                <tbody class="divide-y divide-gray-800">
-                    {% for item in itens %}
-                    <tr class="hover:bg-[#1c2128]">
-                        <td class="p-5 text-white">{{ item.nome }}</td>
-                        <td class="p-5 text-gray-500">{{ item.categoria }}</td>
-                        <td class="p-5 text-center font-mono text-[#00A19B] font-bold text-lg">{{ item.quantidade }}</td>
-                        {% if role == 'Administrator' %}
-                        <td class="p-5 text-right space-x-4">
-                            <a href="/editar/{{ item.id }}" class="text-[#00A19B] text-xs font-bold">EDITAR</a>
-                            <a href="/deletar/{{ item.id }}" class="text-red-500 text-xs font-bold" onclick="return confirm('Excluir?')">EXCLUIR</a>
-                        </td>
-                        {% endif %}
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+    <aside class="sidebar flex flex-col fixed h-full">
+        <div class="p-8">
+            <h1 class="text-xl font-bold tracking-tighter text-white uppercase">Doubloon <span class="text-[#00A19B]">System</span></h1>
+            <p class="text-[9px] text-gray-500 tracking-[0.3em] uppercase mt-1">Advanced Control</p>
         </div>
 
-        <footer class="bg-[#0d1117] p-6 border border-gray-800 rounded text-xs">
-            <h3 class="text-gray-500 uppercase font-bold mb-4 tracking-widest">Atividade Recente</h3>
-            <ul class="space-y-2">
-                {% for log in logs %}
-                <li class="flex justify-between border-b border-gray-800 pb-2 italic">
-                    <span>{{ log.acao }} por {{ log.usuario }}</span>
-                    <span class="text-gray-600">{{ log.data.strftime('%H:%M') }}</span>
-                </li>
-                {% endfor %}
-            </ul>
-        </footer>
-    </div>
+        <nav class="flex-1 px-4 space-y-2">
+            <a href="/" class="nav-link flex items-center p-3 rounded text-sm uppercase font-semibold {% if page == 'dashboard' %}active text-[#00A19B]{% endif %}">
+                <span class="mr-3">📊</span> Dashboard
+            </a>
+            <a href="/inventario" class="nav-link flex items-center p-3 rounded text-sm uppercase font-semibold {% if page == 'inventario' %}active text-[#00A19B]{% endif %}">
+                <span class="mr-3">📦</span> Inventário
+            </a>
+            <a href="/carga" class="nav-link flex items-center p-3 rounded text-sm uppercase font-semibold {% if page == 'carga' %}active text-[#00A19B]{% endif %}">
+                <span class="mr-3">🚛</span> Fluxo de Carga
+            </a>
+        </nav>
+
+        <div class="p-6 border-t border-gray-800">
+            <div class="text-[10px] text-gray-500 mb-2 uppercase tracking-widest">Usuário: {{ role }}</div>
+            <a href="/logout" class="text-xs text-red-500 hover:text-red-400 font-bold uppercase">Sair do Galeão</a>
+        </div>
+    </aside>
+
+    <main class="flex-1 ml-[260px] p-10">
+        
+        {% if page == 'dashboard' %}
+        <header class="mb-10">
+            <h2 class="text-3xl font-bold text-white uppercase tracking-tight">Visão Geral</h2>
+            <div class="w-12 h-1 bg-[#00A19B] mt-2"></div>
+        </header>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="bg-[#161b22] p-6 border border-gray-800 rounded shadow-lg">
+                <p class="text-gray-500 text-[10px] uppercase font-bold mb-1">Total de Ativos</p>
+                <h3 class="text-4xl font-bold text-[#00A19B]">{{ total }}</h3>
+            </div>
+            <div class="bg-[#161b22] p-6 border border-gray-800 rounded shadow-lg">
+                <p class="text-gray-500 text-[10px] uppercase font-bold mb-1">Status do Sistema</p>
+                <h3 class="text-xl font-bold text-green-500 uppercase">Operacional</h3>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if page == 'inventario' %}
+        <header class="mb-10">
+            <h2 class="text-3xl font-bold text-white uppercase tracking-tight">Inventário Atual</h2>
+            <div class="w-12 h-1 bg-[#00A19B] mt-2"></div>
+        </header>
+        <div class="bg-[#161b22] border border-gray-800 p-10 text-center rounded italic text-gray-500">
+            Aguardando integração dos filtros e tabela na próxima etapa.
+        </div>
+        {% endif %}
+
+        {% if page == 'carga' %}
+        <header class="mb-10">
+            <h2 class="text-3xl font-bold text-white uppercase tracking-tight">Recebimento de Carga</h2>
+            <div class="w-12 h-1 bg-[#00A19B] mt-2"></div>
+        </header>
+        <div class="bg-[#161b22] border border-gray-800 p-10 text-center rounded italic text-gray-500">
+            Módulo de movimentação de carga será construído na Etapa 3.
+        </div>
+        {% endif %}
+
+    </main>
+
 </body>
 </html>
