@@ -2,72 +2,49 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doubloon System | Management</title>
+    <title>Doubloon | Aviiva Corporate</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&display=swap" rel="stylesheet">
     <style>body { font-family: 'Inter', sans-serif; }</style>
 </head>
-<body class="bg-[#0b0e11] text-[#e1e1e1] min-h-screen p-6 md:p-12">
-
+<body class="bg-[#0b0e11] text-[#e1e1e1] p-6 md:p-12">
     <div class="max-w-6xl mx-auto">
-        <header class="flex justify-between items-center mb-12 border-l-4 border-[#00A19B] pl-6">
-            <div>
-                <h1 class="text-3xl font-semibold tracking-tight text-white uppercase">Doubloon System</h1>
-                <p class="text-sm text-gray-500 uppercase tracking-widest">Inventory Control Interface</p>
-            </div>
+        <header class="flex justify-between items-center mb-10 border-b border-gray-800 pb-6">
+            <h1 class="text-3xl font-bold text-white uppercase tracking-tighter">Aviiva <span class="text-[#00A19B]">System</span></h1>
             <div class="text-right">
-                <span class="text-[10px] border border-[#00A19B] text-[#00A19B] px-3 py-1 rounded-full font-bold uppercase">
-                    Level: {{ role }}
-                </span>
-                <br>
-                <a href="/logout" class="text-xs text-gray-400 hover:text-white mt-2 inline-block transition">Encerrar Sessão</a>
+                <span class="text-[10px] bg-[#00A19B] text-black px-3 py-1 rounded font-bold">{{ role }}</span>
+                <br><a href="/logout" class="text-xs text-gray-500 hover:text-white transition">Sair do Sistema</a>
             </div>
         </header>
 
-        {% if role == 'administrator' %}
-        <section class="mb-12 bg-[#161b22] p-8 rounded-sm border border-gray-800 shadow-sm">
-            <h2 class="text-white text-lg font-semibold mb-6 uppercase tracking-wider">Novo Registro</h2>
-            <form action="/adicionar" method="POST" class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div class="flex flex-col">
-                    <label class="text-[10px] text-gray-500 uppercase mb-1">Identificação do Item</label>
-                    <input type="text" name="nome" placeholder="Ex: Unidade de Processamento" class="bg-[#0d1117] border border-gray-700 p-2.5 rounded text-sm focus:border-[#00A19B] outline-none" required>
-                </div>
-                <div class="flex flex-col">
-                    <label class="text-[10px] text-gray-500 uppercase mb-1">Categoria</label>
-                    <input type="text" name="categoria" placeholder="Ex: Hardware" class="bg-[#0d1117] border border-gray-700 p-2.5 rounded text-sm focus:border-[#00A19B] outline-none">
-                </div>
-                <div class="flex flex-col">
-                    <label class="text-[10px] text-gray-500 uppercase mb-1">Volume em Estoque</label>
-                    <input type="number" name="quantidade" placeholder="0" class="bg-[#0d1117] border border-gray-700 p-2.5 rounded text-sm focus:border-[#00A19B] outline-none" required>
-                </div>
-                <div class="flex items-end">
-                    <button type="submit" class="w-full bg-[#00A19B] text-white text-xs font-bold py-3 rounded uppercase hover:bg-[#008a84] transition">Confirmar Registro</button>
-                </div>
+        <section class="mb-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+            <form action="/" method="GET" class="md:col-span-2 flex gap-2">
+                <input type="text" name="search" placeholder="Buscar recurso por nome..." class="flex-1 bg-[#161b22] border border-gray-700 p-3 rounded text-sm focus:border-[#00A19B] outline-none">
+                <button type="submit" class="bg-[#00A19B] px-6 rounded font-bold text-black text-xs uppercase">Filtrar</button>
             </form>
+            <select onchange="window.location.href='/?category='+this.value" class="bg-[#161b22] border border-gray-700 p-3 rounded text-sm">
+                <option value="">Todas as Categorias</option>
+                {% for cat in categories %}
+                <option value="{{ cat[0] }}">{{ cat[0] }}</option>
+                {% endfor %}
+            </select>
         </section>
-        {% endif %}
 
-        <div class="bg-[#161b22] border border-gray-800 rounded-sm overflow-hidden">
+        <div class="bg-[#161b22] border border-gray-800 rounded-sm overflow-hidden mb-8">
             <table class="w-full text-left text-sm">
-                <thead class="bg-[#0d1117] text-gray-400 uppercase text-[10px] font-bold tracking-widest">
-                    <tr>
-                        <th class="p-5">Nome do Recurso</th>
-                        <th class="p-5 text-center">Classificação</th>
-                        <th class="p-5 text-center">Status Quantitativo</th>
-                        {% if role == 'administrator' %}<th class="p-5 text-center">Gestão</th>{% endif %}
-                    </tr>
+                <thead class="bg-[#0d1117] text-gray-500 uppercase text-[10px] font-bold">
+                    <tr><th class="p-5">Ativo</th><th class="p-5">Categoria</th><th class="p-5 text-center">Estoque</th>{% if role == 'Administrator' %}<th class="p-5 text-right">Ações</th>{% endif %}</tr>
                 </thead>
                 <tbody class="divide-y divide-gray-800">
                     {% for item in itens %}
-                    <tr class="hover:bg-[#1c2128] transition">
-                        <td class="p-5 font-medium text-white">{{ item.nome }}</td>
-                        <td class="p-5 text-center text-gray-500">{{ item.categoria }}</td>
-                        <td class="p-5 text-center font-mono text-[#00A19B]">{{ item.quantidade }}</td>
-                        {% if role == 'administrator' %}
-                        <td class="p-5 text-center space-x-4">
-                            <a href="/editar/{{ item.id }}" class="text-[#00A19B] hover:text-white transition text-xs uppercase font-bold">Editar</a>
-                            <a href="/deletar/{{ item.id }}" class="text-red-500 hover:text-red-300 transition text-xs uppercase font-bold" onclick="return confirm('Confirmar exclusão permanente?')">Excluir</a>
+                    <tr class="hover:bg-[#1c2128]">
+                        <td class="p-5 text-white">{{ item.nome }}</td>
+                        <td class="p-5 text-gray-500">{{ item.categoria }}</td>
+                        <td class="p-5 text-center font-mono text-[#00A19B] font-bold text-lg">{{ item.quantidade }}</td>
+                        {% if role == 'Administrator' %}
+                        <td class="p-5 text-right space-x-4">
+                            <a href="/editar/{{ item.id }}" class="text-[#00A19B] text-xs font-bold">EDITAR</a>
+                            <a href="/deletar/{{ item.id }}" class="text-red-500 text-xs font-bold" onclick="return confirm('Excluir?')">EXCLUIR</a>
                         </td>
                         {% endif %}
                     </tr>
@@ -75,7 +52,18 @@
                 </tbody>
             </table>
         </div>
-    </div>
 
+        <footer class="bg-[#0d1117] p-6 border border-gray-800 rounded text-xs">
+            <h3 class="text-gray-500 uppercase font-bold mb-4 tracking-widest">Atividade Recente</h3>
+            <ul class="space-y-2">
+                {% for log in logs %}
+                <li class="flex justify-between border-b border-gray-800 pb-2 italic">
+                    <span>{{ log.acao }} por {{ log.usuario }}</span>
+                    <span class="text-gray-600">{{ log.data.strftime('%H:%M') }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+        </footer>
+    </div>
 </body>
 </html>
