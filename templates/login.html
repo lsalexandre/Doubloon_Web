@@ -2,19 +2,42 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Login - Doubloon System</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Autenticação | Doubloon System</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+    </style>
 </head>
-<body class="bg-[#121212] flex items-center justify-center h-screen">
-    <div class="bg-[#1A1A1A] p-10 rounded-lg border-2 border-[#00A19B] text-center shadow-2xl">
-        <h1 class="text-[#00A19B] text-3xl font-serif mb-6 uppercase">Identifique-se, Marujo</h1>
-        <form action="/login" method="POST">
-            <input type="password" name="senha" placeholder="Chave de Acesso" 
-                   class="w-full bg-[#121212] border border-gray-700 p-3 rounded mb-4 text-white text-center outline-none focus:border-[#00A19B]" required>
-            <button type="submit" class="w-full bg-[#00A19B] text-black font-bold py-3 rounded hover:bg-[#007a75] transition">
-                Entrar no Sistema
+<body class="bg-[#0b0e11] flex items-center justify-center min-h-screen p-4">
+
+    <div class="bg-[#161b22] p-10 rounded-sm border border-gray-800 w-full max-w-sm shadow-2xl">
+        <div class="text-center mb-10">
+            <h1 class="text-[#00A19B] text-2xl font-semibold tracking-tighter uppercase">
+                Doubloon <span class="text-white">System</span>
+            </h1>
+            <p class="text-[10px] text-gray-500 uppercase tracking-widest mt-2">Inventory Management Login</p>
+        </div>
+
+        <form action="/login" method="POST" class="space-y-6">
+            <div>
+                <label class="block text-[10px] text-gray-500 uppercase mb-2 font-bold tracking-widest">Chave de Segurança</label>
+                <input type="password" name="senha" placeholder="••••••••" 
+                       class="w-full bg-[#0d1117] border border-gray-700 p-3 rounded text-white text-center text-sm outline-none focus:border-[#00A19B] transition" required>
+            </div>
+
+            <button type="submit" class="w-full bg-[#00A19B] text-white text-xs font-bold py-4 rounded uppercase tracking-widest hover:bg-[#008a84] transition shadow-lg">
+                Autenticar Sistema
             </button>
         </form>
+
+        <div class="mt-12 pt-6 border-t border-gray-800 text-center">
+            <p class="text-[9px] text-gray-600 uppercase tracking-tighter">
+                &copy; 2026 Doubloon System | Corporate Infrastructure
+            </p>
+        </div>
     </div>
+
 </body>
 </html>

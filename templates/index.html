@@ -3,62 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doubloon System - Arsenal</title>
+    <title>Doubloon System | Management</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Pirata+One&display=swap" rel="stylesheet">
-    <style>.font-pirata { font-family: 'Pirata One', cursive; }</style>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Inter', sans-serif; }</style>
 </head>
-<body class="bg-[#121212] text-white p-4 md:p-10 min-h-screen">
+<body class="bg-[#0b0e11] text-[#e1e1e1] min-h-screen p-6 md:p-12">
 
-    <div class="max-w-5xl mx-auto">
-        <div class="flex justify-between items-center mb-8 border-b border-[#00A19B] pb-4">
-            <h1 class="text-4xl font-pirata text-[#00A19B] uppercase tracking-widest">
-                Inventário do Galeão
-            </h1>
+    <div class="max-w-6xl mx-auto">
+        <header class="flex justify-between items-center mb-12 border-l-4 border-[#00A19B] pl-6">
+            <div>
+                <h1 class="text-3xl font-semibold tracking-tight text-white uppercase">Doubloon System</h1>
+                <p class="text-sm text-gray-500 uppercase tracking-widest">Inventory Control Interface</p>
+            </div>
             <div class="text-right">
-                <span class="text-xs uppercase bg-[#00A19B] text-black px-2 py-1 rounded font-bold">
-                    Acesso: {{ role }}
+                <span class="text-[10px] border border-[#00A19B] text-[#00A19B] px-3 py-1 rounded-full font-bold uppercase">
+                    Level: {{ role }}
                 </span>
                 <br>
-                <a href="/logout" class="text-red-500 hover:underline text-sm">Zarpar (Sair)</a>
+                <a href="/logout" class="text-xs text-gray-400 hover:text-white mt-2 inline-block transition">Encerrar Sessão</a>
             </div>
-        </div>
+        </header>
 
-        {% if role == 'admin' %}
-        <div class="mb-10 p-6 bg-[#1A1A1A] border border-gray-700 rounded-lg shadow-2xl">
-            <h2 class="text-[#00A19B] font-pirata text-2xl mb-4 italic">⚓ Abastecer Arsenal</h2>
-            <form action="/adicionar" method="POST" class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <input type="text" name="nome" placeholder="Nome do Item" class="bg-[#121212] border border-gray-600 p-2 rounded text-white outline-none focus:border-[#00A19B]" required>
-                <input type="text" name="categoria" placeholder="Categoria" class="bg-[#121212] border border-gray-600 p-2 rounded text-white outline-none focus:border-[#00A19B]">
-                <input type="number" name="quantidade" placeholder="Qtd" class="bg-[#121212] border border-gray-600 p-2 rounded text-white outline-none focus:border-[#00A19B]" required>
-                <button type="submit" class="bg-[#00A19B] text-black font-bold py-2 rounded hover:bg-[#007a75] transition duration-300">
-                    Cadastrar
-                </button>
+        {% if role == 'administrator' %}
+        <section class="mb-12 bg-[#161b22] p-8 rounded-sm border border-gray-800 shadow-sm">
+            <h2 class="text-white text-lg font-semibold mb-6 uppercase tracking-wider">Novo Registro</h2>
+            <form action="/adicionar" method="POST" class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="flex flex-col">
+                    <label class="text-[10px] text-gray-500 uppercase mb-1">Identificação do Item</label>
+                    <input type="text" name="nome" placeholder="Ex: Unidade de Processamento" class="bg-[#0d1117] border border-gray-700 p-2.5 rounded text-sm focus:border-[#00A19B] outline-none" required>
+                </div>
+                <div class="flex flex-col">
+                    <label class="text-[10px] text-gray-500 uppercase mb-1">Categoria</label>
+                    <input type="text" name="categoria" placeholder="Ex: Hardware" class="bg-[#0d1117] border border-gray-700 p-2.5 rounded text-sm focus:border-[#00A19B] outline-none">
+                </div>
+                <div class="flex flex-col">
+                    <label class="text-[10px] text-gray-500 uppercase mb-1">Volume em Estoque</label>
+                    <input type="number" name="quantidade" placeholder="0" class="bg-[#0d1117] border border-gray-700 p-2.5 rounded text-sm focus:border-[#00A19B] outline-none" required>
+                </div>
+                <div class="flex items-end">
+                    <button type="submit" class="w-full bg-[#00A19B] text-white text-xs font-bold py-3 rounded uppercase hover:bg-[#008a84] transition">Confirmar Registro</button>
+                </div>
             </form>
-        </div>
+        </section>
         {% endif %}
 
-        <div class="bg-[#1A1A1A] border border-[#00A19B] rounded-lg overflow-hidden shadow-2xl">
-            <table class="w-full text-left">
-                <thead class="bg-[#00A19B] text-black font-bold uppercase text-sm">
+        <div class="bg-[#161b22] border border-gray-800 rounded-sm overflow-hidden">
+            <table class="w-full text-left text-sm">
+                <thead class="bg-[#0d1117] text-gray-400 uppercase text-[10px] font-bold tracking-widest">
                     <tr>
-                        <th class="p-4">Item</th>
-                        <th class="p-4 text-center">Categoria</th>
-                        <th class="p-4 text-center">Quantidade</th>
+                        <th class="p-5">Nome do Recurso</th>
+                        <th class="p-5 text-center">Classificação</th>
+                        <th class="p-5 text-center">Status Quantitativo</th>
+                        {% if role == 'administrator' %}<th class="p-5 text-center">Gestão</th>{% endif %}
                     </tr>
                 </thead>
-                <tbody>
+                <tbody class="divide-y divide-gray-800">
                     {% for item in itens %}
-                    <tr class="border-b border-gray-800 hover:bg-[#252525] transition duration-200">
-                        <td class="p-4 font-semibold">{{ item.nome }}</td>
-                        <td class="p-4 text-center text-gray-400">{{ item.categoria }}</td>
-                        <td class="p-4 text-center font-mono text-[#00A19B]">{{ item.quantidade }}</td>
-                    </tr>
-                    {% else %}
-                    <tr>
-                        <td colspan="3" class="p-10 text-center text-gray-500 italic">
-                            O arsenal está vazio. Nenhum tesouro encontrado.
+                    <tr class="hover:bg-[#1c2128] transition">
+                        <td class="p-5 font-medium text-white">{{ item.nome }}</td>
+                        <td class="p-5 text-center text-gray-500">{{ item.categoria }}</td>
+                        <td class="p-5 text-center font-mono text-[#00A19B]">{{ item.quantidade }}</td>
+                        {% if role == 'administrator' %}
+                        <td class="p-5 text-center space-x-4">
+                            <a href="/editar/{{ item.id }}" class="text-[#00A19B] hover:text-white transition text-xs uppercase font-bold">Editar</a>
+                            <a href="/deletar/{{ item.id }}" class="text-red-500 hover:text-red-300 transition text-xs uppercase font-bold" onclick="return confirm('Confirmar exclusão permanente?')">Excluir</a>
                         </td>
+                        {% endif %}
                     </tr>
                     {% endfor %}
                 </tbody>
