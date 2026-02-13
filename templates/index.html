@@ -3,83 +3,193 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Doubloon System | Dashboard</title>
+    <title>Doubloon System | Corporate</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #0b0e11; color: #e1e1e1; }
         .sidebar { width: 260px; background-color: #161b22; border-right: 1px solid #30363d; }
-        .nav-link { transition: all 0.3s; border-left: 3px solid transparent; }
+        .nav-link { transition: all 0.3s; border-left: 3px solid transparent; color: #8b949e; }
         .nav-link:hover, .nav-link.active { background-color: #1c2128; border-left-color: #00A19B; color: #00A19B; }
+        .btn-primary { background-color: #00A19B; color: #000; font-weight: bold; transition: 0.3s; }
+        .btn-primary:hover { background-color: #008a84; }
     </style>
 </head>
 <body class="flex min-h-screen">
 
-    <aside class="sidebar flex flex-col fixed h-full">
+    <aside class="sidebar flex flex-col fixed h-full z-10">
         <div class="p-8">
             <h1 class="text-xl font-bold tracking-tighter text-white uppercase">Doubloon <span class="text-[#00A19B]">System</span></h1>
-            <p class="text-[9px] text-gray-500 tracking-[0.3em] uppercase mt-1">Advanced Control</p>
+            <p class="text-[9px] text-gray-500 tracking-[0.3em] uppercase mt-1">Vacaria Operations</p>
         </div>
 
         <nav class="flex-1 px-4 space-y-2">
-            <a href="/" class="nav-link flex items-center p-3 rounded text-sm uppercase font-semibold {% if page == 'dashboard' %}active text-[#00A19B]{% endif %}">
-                <span class="mr-3">📊</span> Dashboard
+            <a href="/" class="nav-link flex items-center p-3 rounded text-xs uppercase font-semibold tracking-wider {% if page == 'dashboard' %}active{% endif %}">
+                <span class="mr-3">📊</span> Visão Geral
             </a>
-            <a href="/inventario" class="nav-link flex items-center p-3 rounded text-sm uppercase font-semibold {% if page == 'inventario' %}active text-[#00A19B]{% endif %}">
+            <a href="/inventario" class="nav-link flex items-center p-3 rounded text-xs uppercase font-semibold tracking-wider {% if page == 'inventario' %}active{% endif %}">
                 <span class="mr-3">📦</span> Inventário
             </a>
-            <a href="/carga" class="nav-link flex items-center p-3 rounded text-sm uppercase font-semibold {% if page == 'carga' %}active text-[#00A19B]{% endif %}">
+            <a href="/carga" class="nav-link flex items-center p-3 rounded text-xs uppercase font-semibold tracking-wider {% if page == 'carga' %}active{% endif %}">
                 <span class="mr-3">🚛</span> Fluxo de Carga
+            </a>
+            <a href="/relatorios" class="nav-link flex items-center p-3 rounded text-xs uppercase font-semibold tracking-wider {% if page == 'relatorios' %}active{% endif %}">
+                <span class="mr-3">📑</span> Relatórios & Logs
             </a>
         </nav>
 
         <div class="p-6 border-t border-gray-800">
-            <div class="text-[10px] text-gray-500 mb-2 uppercase tracking-widest">Usuário: {{ role }}</div>
-            <a href="/logout" class="text-xs text-red-500 hover:text-red-400 font-bold uppercase">Sair do Galeão</a>
+            <div class="text-[10px] text-gray-500 mb-2 uppercase tracking-widest font-bold">Acesso: {{ role }}</div>
+            <a href="/logout" class="text-xs text-red-500 hover:text-red-400 font-bold uppercase tracking-widest">Encerrar Sessão</a>
         </div>
     </aside>
 
-    <main class="flex-1 ml-[260px] p-10">
+    <main class="flex-1 ml-[260px] p-8 md:p-12">
         
         {% if page == 'dashboard' %}
-        <header class="mb-10">
-            <h2 class="text-3xl font-bold text-white uppercase tracking-tight">Visão Geral</h2>
-            <div class="w-12 h-1 bg-[#00A19B] mt-2"></div>
-        </header>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-[#161b22] p-6 border border-gray-800 rounded shadow-lg">
-                <p class="text-gray-500 text-[10px] uppercase font-bold mb-1">Total de Ativos</p>
+        <header class="mb-10"><h2 class="text-3xl font-bold text-white uppercase tracking-tight">Dashboard</h2><div class="w-10 h-1 bg-[#00A19B] mt-2"></div></header>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div class="bg-[#161b22] p-6 border border-gray-800 rounded shadow hover:border-[#00A19B] transition">
+                <p class="text-gray-500 text-[10px] uppercase font-bold mb-1 tracking-widest">Total de Ativos</p>
                 <h3 class="text-4xl font-bold text-[#00A19B]">{{ total }}</h3>
             </div>
-            <div class="bg-[#161b22] p-6 border border-gray-800 rounded shadow-lg">
-                <p class="text-gray-500 text-[10px] uppercase font-bold mb-1">Status do Sistema</p>
-                <h3 class="text-xl font-bold text-green-500 uppercase">Operacional</h3>
+            <div class="bg-[#161b22] p-6 border border-gray-800 rounded shadow hover:border-yellow-500 transition">
+                <p class="text-gray-500 text-[10px] uppercase font-bold mb-1 tracking-widest">Alerta de Estoque Baixo</p>
+                <h3 class="text-4xl font-bold text-yellow-500">{{ alerta }}</h3>
             </div>
+            <div class="bg-[#161b22] p-6 border border-gray-800 rounded shadow">
+                <p class="text-gray-500 text-[10px] uppercase font-bold mb-1 tracking-widest">Status do Servidor</p>
+                <h3 class="text-xl font-bold text-green-500 uppercase mt-2">Online • Render</h3>
+            </div>
+        </div>
+
+        <div class="bg-[#161b22] p-6 border border-gray-800 rounded">
+            <h3 class="text-sm font-bold text-white uppercase mb-4 tracking-widest border-b border-gray-800 pb-2">Últimas Atividades</h3>
+            <ul class="text-xs space-y-3">
+                {% for log in logs %}
+                <li class="flex justify-between text-gray-400">
+                    <span><strong class="text-[#00A19B]">{{ log.usuario }}:</strong> {{ log.acao }}</span>
+                    <span class="text-gray-600">{{ log.data.strftime('%H:%M') }}</span>
+                </li>
+                {% endfor %}
+            </ul>
         </div>
         {% endif %}
 
         {% if page == 'inventario' %}
-        <header class="mb-10">
-            <h2 class="text-3xl font-bold text-white uppercase tracking-tight">Inventário Atual</h2>
-            <div class="w-12 h-1 bg-[#00A19B] mt-2"></div>
-        </header>
-        <div class="bg-[#161b22] border border-gray-800 p-10 text-center rounded italic text-gray-500">
-            Aguardando integração dos filtros e tabela na próxima etapa.
+        <header class="mb-8"><h2 class="text-3xl font-bold text-white uppercase tracking-tight">Gestão de Inventário</h2></header>
+
+        {% if role == 'Diretoria' %}
+        <details class="mb-8 bg-[#161b22] border border-[#00A19B]/30 rounded">
+            <summary class="p-4 cursor-pointer text-[#00A19B] font-bold text-xs uppercase tracking-widest hover:bg-[#1c2128]">
+                + Cadastrar Novo Tipo de Item
+            </summary>
+            <div class="p-6 border-t border-gray-800">
+                <form action="/adicionar" method="POST" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <input type="text" name="nome" placeholder="Nome do Item" class="bg-[#0b0e11] border border-gray-700 p-3 rounded text-xs text-white outline-none focus:border-[#00A19B]" required>
+                    <input type="text" name="categoria" placeholder="Categoria (Ex: Hardware)" class="bg-[#0b0e11] border border-gray-700 p-3 rounded text-xs text-white outline-none focus:border-[#00A19B]">
+                    <input type="number" name="quantidade" placeholder="Qtd Inicial" class="bg-[#0b0e11] border border-gray-700 p-3 rounded text-xs text-white outline-none focus:border-[#00A19B]" required>
+                    <button type="submit" class="btn-primary rounded text-xs uppercase tracking-widest">Salvar</button>
+                </form>
+            </div>
+        </details>
+        {% endif %}
+
+        <div class="flex gap-4 mb-6">
+            <form action="/inventario" method="GET" class="flex-1 flex gap-2">
+                <input type="text" name="search" value="{{ search }}" placeholder="Buscar por nome..." class="flex-1 bg-[#161b22] border border-gray-700 p-3 rounded text-xs text-white focus:border-[#00A19B] outline-none">
+                <select name="category" class="bg-[#161b22] border border-gray-700 p-3 rounded text-xs text-white focus:border-[#00A19B] outline-none">
+                    <option value="">Todas as Categorias</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat[0] }}" {% if selected_cat == cat[0] %}selected{% endif %}>{{ cat[0] }}</option>
+                    {% endfor %}
+                </select>
+                <button type="submit" class="bg-gray-700 text-white px-6 rounded text-xs font-bold uppercase hover:bg-gray-600">Filtrar</button>
+            </form>
+        </div>
+
+        <div class="bg-[#161b22] border border-gray-800 rounded overflow-hidden shadow-lg">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-[#0d1117] text-gray-500 uppercase font-bold tracking-widest">
+                    <tr><th class="p-4">Item</th><th class="p-4">Categoria</th><th class="p-4 text-center">Estoque</th>{% if role == 'Diretoria' %}<th class="p-4 text-right">Gestão</th>{% endif %}</tr>
+                </thead>
+                <tbody class="divide-y divide-gray-800 text-gray-300">
+                    {% for item in itens %}
+                    <tr class="hover:bg-[#1c2128] transition">
+                        <td class="p-4 font-semibold text-white text-sm">{{ item.nome }}</td>
+                        <td class="p-4 text-gray-500">{{ item.categoria }}</td>
+                        <td class="p-4 text-center font-mono text-[#00A19B] font-bold text-sm">{{ item.quantidade }}</td>
+                        {% if role == 'Diretoria' %}
+                        <td class="p-4 text-right space-x-3">
+                            <a href="/editar/{{ item.id }}" class="text-[#00A19B] font-bold hover:underline">EDITAR</a>
+                            <a href="/deletar/{{ item.id }}" class="text-red-500 font-bold hover:underline" onclick="return confirm('Confirmar exclusão?')">EXCLUIR</a>
+                        </td>
+                        {% endif %}
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
         {% endif %}
 
         {% if page == 'carga' %}
-        <header class="mb-10">
-            <h2 class="text-3xl font-bold text-white uppercase tracking-tight">Recebimento de Carga</h2>
-            <div class="w-12 h-1 bg-[#00A19B] mt-2"></div>
+        <header class="mb-10"><h2 class="text-3xl font-bold text-white uppercase tracking-tight">Recebimento & Carga</h2></header>
+        
+        <div class="max-w-xl mx-auto bg-[#161b22] p-10 border border-[#00A19B]/50 rounded shadow-2xl">
+            <h3 class="text-center text-[#00A19B] uppercase font-bold tracking-[0.2em] mb-8 text-sm">Registro de Movimentação</h3>
+            <form action="/movimentar" method="POST" class="space-y-6">
+                <div>
+                    <label class="block text-[10px] text-gray-500 uppercase mb-2 font-bold">Item do Inventário</label>
+                    <select name="item_id" class="w-full bg-[#0b0e11] border border-gray-700 p-4 rounded text-sm text-white focus:border-[#00A19B] outline-none">
+                        {% for item in itens %}
+                        <option value="{{ item.id }}">{{ item.nome }} (Atual: {{ item.quantidade }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-[10px] text-gray-500 uppercase mb-2 font-bold">Quantidade</label>
+                        <input type="number" name="quantidade" placeholder="0" class="w-full bg-[#0b0e11] border border-gray-700 p-4 rounded text-sm text-white focus:border-[#00A19B] outline-none" required>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] text-gray-500 uppercase mb-2 font-bold">Operação</label>
+                        <select name="tipo" class="w-full bg-[#0b0e11] border border-gray-700 p-4 rounded text-sm text-white focus:border-[#00A19B] outline-none">
+                            <option value="entrada">📥 Entrada (+)</option>
+                            <option value="saida">📤 Saída (-)</option>
+                        </select>
+                    </div>
+                </div>
+                <button type="submit" class="w-full btn-primary py-4 rounded text-xs uppercase tracking-widest shadow-lg mt-4">Confirmar Movimentação</button>
+            </form>
+        </div>
+        {% endif %}
+
+        {% if page == 'relatorios' %}
+        <header class="mb-8 flex justify-between items-center">
+            <h2 class="text-3xl font-bold text-white uppercase tracking-tight">Logs do Sistema</h2>
+            <a href="/exportar" class="bg-[#00A19B] text-black font-bold px-6 py-3 rounded text-xs uppercase hover:bg-[#008a84] transition shadow-lg flex items-center">
+                <span class="mr-2">⬇</span> Baixar Excel
+            </a>
         </header>
-        <div class="bg-[#161b22] border border-gray-800 p-10 text-center rounded italic text-gray-500">
-            Módulo de movimentação de carga será construído na Etapa 3.
+        <div class="bg-[#161b22] border border-gray-800 rounded overflow-hidden">
+            <table class="w-full text-left text-xs">
+                <thead class="bg-[#0d1117] text-gray-500 uppercase font-bold tracking-widest">
+                    <tr><th class="p-4">Data e Hora</th><th class="p-4">Descrição da Atividade</th><th class="p-4 text-right">Usuário</th></tr>
+                </thead>
+                <tbody class="divide-y divide-gray-800 text-gray-400">
+                    {% for log in logs %}
+                    <tr class="hover:bg-[#1c2128]">
+                        <td class="p-4 font-mono">{{ log.data.strftime('%d/%m/%Y %H:%M') }}</td>
+                        <td class="p-4 text-white">{{ log.acao }}</td>
+                        <td class="p-4 text-right uppercase text-[#00A19B] font-bold">{{ log.usuario }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
         {% endif %}
 
     </main>
-
 </body>
 </html>
