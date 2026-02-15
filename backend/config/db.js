@@ -1,25 +1,23 @@
-const mysql = require('mysql2/promise');
+const { Pool } = require('pg');
 require('dotenv').config();
 
-// Criamos um 'pool' de conexões para maior eficiência
-const db = mysql.createPool({
-  host: process.env.DB_HOST,
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-  waitForConnections: true,
-  connectionLimit: 10,
-  queueLimit: 0
+// ⚓ Conexão em Nuvem (Preparada para o Neon.tech e Render)
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false // Exigência para conexões seguras na nuvem
+  }
 });
 
-// Teste de conexão imediato ao iniciar
-db.getConnection()
-  .then(conn => {
-    console.log('⚓ Conexão com o banco de dados do Doubloon System estabelecida!');
-    conn.release();
+pool.connect()
+  .then(client => {
+    console.log('⚓ Doubloon System: Conectado ao banco de dados na NUVEM com sucesso!');
+    client.release();
   })
   .catch(err => {
-    console.error('❌ Erro ao conectar ao banco de dados:', err.message);
+    console.error('❌ Erro ao conectar ao banco na nuvem. Verifique a DATABASE_URL.', err.message);
   });
 
-module.exports = db;
+module.exports = {
+  query: (text, params) => pool.query(text, params),
+};
