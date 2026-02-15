@@ -1,3 +1,4 @@
+// Versao 2.0 - Link Render Corrigido
 import React, { useState } from 'react';
 import { Lock, User, ShieldCheck } from 'lucide-react';
 
