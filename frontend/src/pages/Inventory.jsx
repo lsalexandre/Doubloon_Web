@@ -28,12 +28,12 @@ export default function Inventory() {
   const carregar = async () => {
     try {
       const token = localStorage.getItem('token');
-      const r1 = await fetch('http://https://doubloonsystem.onrender.com/api/inventory', {
+      const r1 = await fetch('https://doubloonsystem.onrender.com/api/inventory', {
         headers: { 'x-access-token': token }
       });
       setItems(await r1.json());
 
-      const r2 = await fetch('http://https://doubloonsystem.onrender.com/api/categories', {
+      const r2 = await fetch('https://doubloonsystem.onrender.com/api/categories', {
         headers: { 'x-access-token': token }
       });
       setCategories(await r2.json());
@@ -65,7 +65,7 @@ export default function Inventory() {
 
   const executeExcluir = async (id) => {
     try {
-      const response = await fetch(`http://https://doubloonsystem.onrender.com/api/inventory/${id}`, {
+      const response = await fetch(`https://doubloonsystem.onrender.com/api/inventory/${id}`, {
         method: 'DELETE',
         headers: { 'x-access-token': localStorage.getItem('token') }
       });
@@ -91,8 +91,8 @@ export default function Inventory() {
     e.preventDefault();
     
     const url = editingId 
-      ? `http://https://doubloonsystem.onrender.com/api/inventory/${editingId}` 
-      : 'http://https://doubloonsystem.onrender.com/api/inventory';
+      ? `https://doubloonsystem.onrender.com/api/inventory/${editingId}` 
+      : 'https://doubloonsystem.onrender.com/api/inventory';
     const method = editingId ? 'PUT' : 'POST';
 
     try {

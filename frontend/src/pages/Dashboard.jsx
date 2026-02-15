@@ -26,14 +26,14 @@ export default function Dashboard() {
 
   const loadBaseData = async () => {
     try {
-      const rStats = await fetch('http://https://doubloonsystem.onrender.com/api/dashboard-stats', { headers });
+      const rStats = await fetch('https://doubloonsystem.onrender.com/api/dashboard-stats', { headers });
       setStats(await rStats.json());
 
-      const rInv = await fetch('http://https://doubloonsystem.onrender.com/api/inventory', { headers });
+      const rInv = await fetch('https://doubloonsystem.onrender.com/api/inventory', { headers });
       const invData = await rInv.json();
       setInventory(invData);
 
-      const rLogs = await fetch('http://https://doubloonsystem.onrender.com/api/logs?limit=5', { headers });
+      const rLogs = await fetch('https://doubloonsystem.onrender.com/api/logs?limit=5', { headers });
       setRecentLogs(await rLogs.json());
     } catch (err) { console.error("Erro base:", err); }
   };
@@ -41,7 +41,7 @@ export default function Dashboard() {
   // ⚓ Nova Função de Busca para a Timeline
   const loadTimeline = async () => {
     try {
-      const res = await fetch('http://https://doubloonsystem.onrender.com/api/analytics/timeline', { headers });
+      const res = await fetch('https://doubloonsystem.onrender.com/api/analytics/timeline', { headers });
       setTimeline(await res.json());
     } catch (err) { console.error("Erro timeline:", err); }
   };

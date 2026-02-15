@@ -36,7 +36,7 @@ export default function Movements() {
   };
 
   const load = () => {
-    fetch('http://https://doubloonsystem.onrender.com/api/inventory', {
+    fetch('https://doubloonsystem.onrender.com/api/inventory', {
       headers: { 'x-access-token': localStorage.getItem('token') }
     })
       .then(res => res.json())
@@ -53,7 +53,7 @@ export default function Movements() {
   // ⚓ Disparo Seguro de Movimentação (Imune a HTML feio)
   const executeMove = async (payload, successMsg) => {
     try {
-      const res = await fetch('http://https://doubloonsystem.onrender.com/api/inventory/move', {
+      const res = await fetch('https://doubloonsystem.onrender.com/api/inventory/move', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-access-token': localStorage.getItem('token') },
         body: JSON.stringify(payload)
@@ -118,7 +118,7 @@ export default function Movements() {
     if (!nfReason || nfItems.length === 0) return showToast("Preencha o motivo e adicione itens!", "error");
 
     requestConfirm(`Processar Nota Fiscal com ${nfItems.length} itens?`, async () => {
-      const res = await fetch('http://https://doubloonsystem.onrender.com/api/inventory/bulk-move', {
+      const res = await fetch('https://doubloonsystem.onrender.com/api/inventory/bulk-move', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-access-token': localStorage.getItem('token') },
         body: JSON.stringify({ reason: nfReason, items: nfItems })

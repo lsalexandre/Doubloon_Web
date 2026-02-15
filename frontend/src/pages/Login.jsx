@@ -11,7 +11,7 @@ export default function Login({ setAuth }) {
     setError('');
 
     try {
-      const response = await fetch('http://https://doubloonsystem.onrender.com/api/login', {
+      const response = await fetch('https://doubloonsystem.onrender.com/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ username, password })

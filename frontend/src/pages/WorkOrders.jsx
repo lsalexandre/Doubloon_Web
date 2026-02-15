@@ -42,7 +42,7 @@ export default function WorkOrders({ tipoLabel, dbType }) {
 
   const load = async () => {
     try {
-      const r1 = await fetch('http://https://doubloonsystem.onrender.com/api/work-orders', {
+      const r1 = await fetch('https://doubloonsystem.onrender.com/api/work-orders', {
         headers: { 'x-access-token': localStorage.getItem('token') }
       });
       const d1 = await r1.json();
@@ -56,14 +56,14 @@ export default function WorkOrders({ tipoLabel, dbType }) {
 
       // ⚓ Busca filtrada por data na aba de Arquivo
       if (showArchived) {
-        const rArchive = await fetch(`http://https://doubloonsystem.onrender.com/api/work-orders?status=entregue&date=${archiveDate}`, {
+        const rArchive = await fetch(`https://doubloonsystem.onrender.com/api/work-orders?status=entregue&date=${archiveDate}`, {
           headers: { 'x-access-token': localStorage.getItem('token') }
         });
         const archData = await rArchive.json();
         setOrders(archData.filter(o => o.type === dbType));
       }
       
-      const r2 = await fetch('http://https://doubloonsystem.onrender.com/api/inventory', {
+      const r2 = await fetch('https://doubloonsystem.onrender.com/api/inventory', {
         headers: { 'x-access-token': localStorage.getItem('token') }
       });
       setInventory(await r2.json());
@@ -88,7 +88,7 @@ export default function WorkOrders({ tipoLabel, dbType }) {
     setFormData({ name: order.name, priority: order.priority });
     
     try {
-      const res = await fetch(`http://https://doubloonsystem.onrender.com/api/work-orders/${order.id}/items`, {
+      const res = await fetch(`https://doubloonsystem.onrender.com/api/work-orders/${order.id}/items`, {
         headers: { 'x-access-token': localStorage.getItem('token') }
       });
       if (!res.ok) throw new Error("Erro ao buscar itens");
@@ -102,7 +102,7 @@ export default function WorkOrders({ tipoLabel, dbType }) {
   };
 
   const abrirLista = async (order) => {
-    const res = await fetch(`http://https://doubloonsystem.onrender.com/api/work-orders/${order.id}/items`, {
+    const res = await fetch(`https://doubloonsystem.onrender.com/api/work-orders/${order.id}/items`, {
       headers: { 'x-access-token': localStorage.getItem('token') }
     });
     setViewItems({ ...order, list: await res.json() });
@@ -116,7 +116,7 @@ export default function WorkOrders({ tipoLabel, dbType }) {
 
     requestConfirm(msg, async () => {
       try {
-        const res = await fetch(`http://https://doubloonsystem.onrender.com/api/work-orders/${id}/status`, {
+        const res = await fetch(`https://doubloonsystem.onrender.com/api/work-orders/${id}/status`, {
           method: 'PUT',
           headers: { 
             'Content-Type': 'application/json',
@@ -136,7 +136,7 @@ export default function WorkOrders({ tipoLabel, dbType }) {
 
   const cancelar = (id) => {
     requestConfirm("Atenção: Deseja apagar esta ordem do sistema? Isso não poderá ser desfeito.", async () => {
-      const res = await fetch(`http://https://doubloonsystem.onrender.com/api/work-orders/${id}`, { 
+      const res = await fetch(`https://doubloonsystem.onrender.com/api/work-orders/${id}`, { 
         method: 'DELETE',
         headers: { 'x-access-token': localStorage.getItem('token') }
       });
@@ -160,7 +160,7 @@ export default function WorkOrders({ tipoLabel, dbType }) {
     if (stagedItems.length === 0) return showToast("Adicione ao menos um item da lista!", "error");
 
     const payload = { ...formData, type: dbType, items: stagedItems };
-    const url = editingId ? `http://https://doubloonsystem.onrender.com/api/work-orders/${editingId}` : 'http://https://doubloonsystem.onrender.com/api/work-orders';
+    const url = editingId ? `https://doubloonsystem.onrender.com/api/work-orders/${editingId}` : 'https://doubloonsystem.onrender.com/api/work-orders';
     const method = editingId ? 'PUT' : 'POST';
 
     try {

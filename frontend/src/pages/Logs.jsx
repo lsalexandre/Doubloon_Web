@@ -32,7 +32,7 @@ export default function Logs() {
       if (filters.category !== 'TODAS') params.append('category', filters.category);
       if (filters.searchTerm) params.append('search', filters.searchTerm);
 
-      const response = await fetch(`http://https://doubloonsystem.onrender.com/api/logs?${params.toString()}`, {
+      const response = await fetch(`https://doubloonsystem.onrender.com/api/logs?${params.toString()}`, {
         headers: { 'x-access-token': localStorage.getItem('token') }
       });
       
