@@ -229,6 +229,18 @@ router.put('/work-orders/:id/status', verifyJWT, async (req, res) => {
         }
         await saveLog(`Entrega Confirmada: Itens da OS-${id} saíram do estoque físico.`, 'OPERACAO', req.username);
     }
+    // ⚓ NOVA LÓGICA: Estorno de Entrega Completa (Volta para Pendente)
+    else if (currentStatus === 'entregue' && status === 'pendente') {
+        const items = await db.query('SELECT item_id, quantity FROM work_order_items WHERE work_order_id = $1', [id]);
+        for (let it of items.rows) {
+          const itemInfo = await db.query('SELECT category FROM inventory_items WHERE id = $1', [it.item_id]);
+          // Devolve o estoque FÍSICO (pois ele foi subtraído na entrega)
+          await db.query('UPDATE inventory_items SET physical_stock = physical_stock + $1 WHERE id = $2', [it.quantity, it.item_id]);
+          // Registra a entrada compensatória no físico
+          await recordMovement(it.item_id, it.quantity, 'fisico_estorno', itemInfo.rows[0]?.category); 
+        }
+        await saveLog(`ESTORNO DE ENTREGA: Itens da OS-${id} retornaram ao estoque físico. Ordem pendente.`, 'OPERACAO', req.username);
+    }
     
     await db.query('UPDATE work_orders SET status = $1 WHERE id = $2', [status, id]);
     res.json({ message: 'Status atualizado!' });

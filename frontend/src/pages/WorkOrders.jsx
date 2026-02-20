@@ -257,19 +257,6 @@ export default function WorkOrders({ tipoLabel, dbType }) {
             
             {showArchived && <div className="absolute top-0 right-0 bg-[#0f172a]/50 w-full h-full z-0 pointer-events-none"></div>}
 
-            <div className="relative z-10">
-              <div className="flex justify-between text-[9px] font-black uppercase mb-4">
-                <span className="text-gray-500 bg-[#0f172a] px-2 py-1 rounded-sm border border-gray-800">OS-{o.id}</span>
-                <span className={`px-2 py-1 rounded-sm flex items-center gap-1 ${
-                  o.status === 'pendente' ? 'bg-yellow-500/10 border border-yellow-500/30 text-yellow-500' : 
-                  o.status === 'separado' ? 'bg-[#00e5ff]/10 border border-[#00e5ff]/30 text-[#00e5ff]' : 'bg-green-500/10 border border-green-500/30 text-green-500'
-                }`}>
-                  {o.status === 'entregue' && <CheckCircle size={10}/>} {o.status}
-                </span>
-              </div>
-              <h3 className={`text-lg font-black uppercase mb-6 leading-tight ${showArchived ? 'text-gray-400' : 'text-white'}`}>{o.name}</h3>
-            </div>
-
             <div className="space-y-2 relative z-10">
               <div className="flex gap-2">
                 <button onClick={() => abrirLista(o)} className="flex-1 bg-[#0f172a] border border-gray-800 p-2 text-[9px] font-black uppercase hover:bg-[#00e5ff] hover:text-black hover:border-[#00e5ff] transition-all flex items-center justify-center gap-2">
@@ -302,8 +289,13 @@ export default function WorkOrders({ tipoLabel, dbType }) {
                   </button>
                 </div>
               )}
+              {/* ⚓ NOVO: BOTÃO DE ESTORNO DE ENTREGA (Aparece apenas na aba de Entregues/Arquivo) */}
+              {o.status === 'entregue' && showArchived && (
+                <button onClick={() => mudarStatus(o.id, 'pendente')} className="w-full bg-red-900/50 border border-red-500/50 text-red-300 py-2.5 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-red-600 hover:text-white transition-all mt-2">
+                  <RotateCcw size={14} /> Estornar Entrega (Devolver Físico)
+                </button>
+              )}
             </div>
-          </div>
         ))}
 
         {orders.length === 0 && (
