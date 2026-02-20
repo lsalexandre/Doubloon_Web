@@ -97,7 +97,8 @@ const verifyJWT = (req, res, next) => {
 
 router.get('/inventory', verifyJWT, async (req, res) => {
   try {
-    const result = await db.query('SELECT * FROM inventory_items ORDER BY category, name');
+    // ⚓ Agora só busca os itens que estão ativos (active = true)
+    const result = await db.query('SELECT * FROM inventory_items WHERE active = true ORDER BY category, name');
     res.json(result.rows);
   } catch (err) { res.status(500).send(err.message); }
 });
@@ -133,6 +134,20 @@ router.put('/inventory/:id', verifyJWT, async (req, res) => {
     await saveLog(`Item Editado: ${name} (ID: ${id})`, 'INVENTARIO', req.username);
     res.json({ message: 'Item atualizado com sucesso!', item: result.rows[0] });
   } catch (err) { res.status(500).send(err.message); }
+});
+
+router.delete('/inventory/:id', verifyJWT, async (req, res) => {
+  const { id } = req.params;
+  try {
+    // ⚓ Soft Delete: Em vez de usar DELETE FROM, usamos UPDATE para "esconder" a peça
+    await db.query('UPDATE inventory_items SET active = false WHERE id = $1', [id]);
+    
+    await saveLog(`Item Desativado/Excluído (ID: ${id})`, 'INVENTARIO', req.username);
+    res.json({ message: 'Peça desativada com sucesso!' });
+  } catch (err) { 
+    console.error("Erro ao excluir item:", err.message);
+    res.status(500).send(err.message); 
+  }
 });
 
 // ==========================================

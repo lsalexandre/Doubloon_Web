@@ -63,7 +63,7 @@ export default function Inventory() {
     setIsModalOpen(true);
   };
 
-  const executeExcluir = async (id) => {
+ const executeExcluir = async (id) => {
     try {
       const response = await fetch(`https://doubloonsystem.onrender.com/api/inventory/${id}`, {
         method: 'DELETE',
@@ -71,16 +71,12 @@ export default function Inventory() {
       });
       
       if (response.ok) {
-        showToast("Peça removida do estoque com sucesso!", "success");
+        // ⚓ Mensagem atualizada para refletir a exclusão lógica
+        showToast("Peça excluída e ocultada do sistema!", "success");
         carregar();
       } else {
-        const isHtml = response.headers.get('content-type')?.includes('text/html');
-        if (isHtml) {
-          showToast("Bloqueado: Este item possui histórico ou está em uma OS.", "error");
-        } else {
-          const msg = await response.text();
-          showToast(msg || "Erro ao tentar excluir a peça.", "error");
-        }
+        const msg = await response.text();
+        showToast(msg || "Erro ao tentar excluir a peça.", "error");
       }
     } catch (error) {
       showToast("Erro de comunicação com o servidor.", "error");
