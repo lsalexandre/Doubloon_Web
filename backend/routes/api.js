@@ -1,11 +1,20 @@
 const express = require('express');
 const router = express.Router();
-const db = require('../config/db');
+const db = require('../config/db'); // ou '../db' dependendo de onde está o seu arquivo
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcryptjs'); // ⚓ Nossa nova armadura
 
 const SECRET_KEY = process.env.JWT_SECRET || 'chave_reserva_apenas_para_testes';
 
-// ⚓ saveLog agora recebe o nome do usuário como terceiro parâmetro
+// ==========================================
+// 🔔 ROTA DE DESPERTAR (PING) - NOVA!
+// ==========================================
+// O frontend chamará isso para saber se o Render acordou
+router.get('/ping', (req, res) => {
+  res.status(200).json({ status: 'awake', message: 'Estou acordado, Capitão!' });
+});
+
+// ⚓ Função Auxiliar de Logs
 const saveLog = async (desc, cat, user = 'SISTEMA') => {
   try {
     await db.query('INSERT INTO logs (description, category, username) VALUES ($1, $2, $3)', [desc, cat, user]);
@@ -22,38 +31,68 @@ const recordMovement = async (itemId, qty, type, category) => {
 };
 
 // ==========================================
-// 🔐 AUTENTICAÇÃO
+// 🔐 AUTENTICAÇÃO INTELIGENTE (COM BCRYPT)
 // ==========================================
-
 router.post('/login', async (req, res) => {
   const { username, password } = req.body;
+  
   try {
-    const result = await db.query('SELECT * FROM users WHERE username = $1 AND password = $2', [username, password]);
-    if (result.rows.length > 0) {
-      const user = result.rows[0];
+    // 1. Busca o usuário no banco
+    const result = await db.query('SELECT * FROM users WHERE username = $1', [username]);
+    
+    if (result.rows.length === 0) {
+      return res.status(401).json({ auth: false, message: 'Usuário não encontrado!' });
+    }
+
+    const user = result.rows[0];
+    let passwordMatch = false;
+
+    // 2. Tenta verificar se a senha salva já está protegida pelo Bcrypt (começa com $2a$ ou $2b$)
+    if (user.password.startsWith('$2')) {
+      passwordMatch = await bcrypt.compare(password, user.password);
+    } 
+    // 3. Se não estiver protegida, compara como texto simples (Modo de Migração)
+    else if (user.password === password) {
+      passwordMatch = true;
+      
+      // ⚓ A MÁGICA: Criptografa a senha antiga agora mesmo e salva de volta no banco!
+      const salt = await bcrypt.genSalt(10);
+      const hashedPassword = await bcrypt.hash(password, salt);
+      await db.query('UPDATE users SET password = $1 WHERE id = $2', [hashedPassword, user.id]);
+      console.log(`🔒 Senha do usuário ${username} migrada para Bcrypt com sucesso!`);
+    }
+
+    // 4. Se a senha bater (seja texto ou hash), libera o acesso
+    if (passwordMatch) {
       const token = jwt.sign({ id: user.id, username: user.username }, SECRET_KEY, { expiresIn: '8h' });
-      // ⚓ Log de login registra o próprio usuário
       await saveLog(`Usuário ${username} logado no sistema`, 'SEGURANCA', username);
       res.json({ auth: true, token, username: user.username });
     } else {
-      res.status(401).json({ auth: false, message: 'Usuário ou senha incorretos!' });
+      res.status(401).json({ auth: false, message: 'Senha incorreta!' });
     }
-  } catch (err) { res.status(500).send(err.message); }
+    
+  } catch (err) { 
+    console.error("Erro no login:", err.message);
+    res.status(500).send("Erro interno do servidor."); 
+  }
 });
 
 const verifyJWT = (req, res, next) => {
   const token = req.headers['x-access-token'];
   if (!token) return res.status(401).json({ auth: false, message: 'Nenhum token fornecido.' });
+  
   jwt.verify(token, SECRET_KEY, (err, decoded) => {
-    if (err) return res.status(500).json({ auth: false, message: 'Falha ao autenticar token.' });
+    // Se o token for inválido, manda um erro especial para forçar o logout no frontend
+    if (err) return res.status(403).json({ auth: false, message: 'Token expirado ou inválido. Faça login novamente.' });
+    
     req.userId = decoded.id;
-    req.username = decoded.username; // ⚓ Agora o servidor sabe quem é o autor da requisição
+    req.username = decoded.username; 
     next();
   });
 };
 
 // ==========================================
-// 📦 INVENTÁRIO & CATEGORIAS
+// 📦 INVENTÁRIO & CATEGORIAS (MANTIDAS INTACTAS)
 // ==========================================
 
 router.get('/inventory', verifyJWT, async (req, res) => {
@@ -82,33 +121,22 @@ router.post('/inventory', verifyJWT, async (req, res) => {
   } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-// ==========================================
-// 📝 EDIÇÃO DE ITEM (NOME, CATEGORIA, ALERTA)
-// ==========================================
 router.put('/inventory/:id', verifyJWT, async (req, res) => {
   const { id } = req.params;
   const { name, category, alert_minimum } = req.body;
-
   try {
     const result = await db.query(
       'UPDATE inventory_items SET name = $1, category = $2, alert_minimum = $3 WHERE id = $4 RETURNING *',
       [name, category, alert_minimum, id]
     );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({ message: "Item não encontrado no estoque." });
-    }
-
+    if (result.rows.length === 0) return res.status(404).json({ message: "Item não encontrado no estoque." });
     await saveLog(`Item Editado: ${name} (ID: ${id})`, 'INVENTARIO', req.username);
     res.json({ message: 'Item atualizado com sucesso!', item: result.rows[0] });
-  } catch (err) {
-    console.error("Erro ao editar item:", err.message);
-    res.status(500).send(err.message);
-  }
+  } catch (err) { res.status(500).send(err.message); }
 });
 
 // ==========================================
-// 🚛 MOVIMENTAÇÕES (COM REGISTRO ANALÍTICO)
+// 🚛 MOVIMENTAÇÕES (MANTIDAS INTACTAS)
 // ==========================================
 
 router.post('/inventory/move', verifyJWT, async (req, res) => {
@@ -118,16 +146,10 @@ router.post('/inventory/move', verifyJWT, async (req, res) => {
     const itemInfo = await db.query('SELECT category FROM inventory_items WHERE id = $1', [itemId]);
     const cat = itemInfo.rows[0]?.category;
 
-    await db.query(
-      'UPDATE inventory_items SET physical_stock = physical_stock + $1, virtual_stock = virtual_stock + $1 WHERE id = $2',
-      [qtyChange, itemId]
-    );
+    await db.query('UPDATE inventory_items SET physical_stock = physical_stock + $1, virtual_stock = virtual_stock + $1 WHERE id = $2', [qtyChange, itemId]);
 
     if (isRetroactive && date) {
-        await db.query(
-            'INSERT INTO inventory_movements (item_id, quantity, type, category, created_at) VALUES ($1, $2, $3, $4, $5)',
-            [itemId, qtyChange, 'fisico', cat, `${date} 12:00:00`]
-        );
+        await db.query('INSERT INTO inventory_movements (item_id, quantity, type, category, created_at) VALUES ($1, $2, $3, $4, $5)', [itemId, qtyChange, 'fisico', cat, `${date} 12:00:00`]);
         await saveLog(`LANÇAMENTO PASSADO (${operation.toUpperCase()} - ${date}): ${quantity} un. Motivo: ${reason}`, 'MOVIMENTACAO', req.username);
     } else {
         await recordMovement(itemId, qtyChange, 'fisico', cat);
@@ -143,10 +165,7 @@ router.post('/inventory/bulk-move', verifyJWT, async (req, res) => {
   try {
     for (let item of items) {
       const itemInfo = await db.query('SELECT category FROM inventory_items WHERE id = $1', [item.id]);
-      await db.query(
-        'UPDATE inventory_items SET physical_stock = physical_stock + $1, virtual_stock = virtual_stock + $1 WHERE id = $2',
-        [item.quantity, item.id]
-      );
+      await db.query('UPDATE inventory_items SET physical_stock = physical_stock + $1, virtual_stock = virtual_stock + $1 WHERE id = $2', [item.quantity, item.id]);
       await recordMovement(item.id, item.quantity, 'fisico', itemInfo.rows[0]?.category);
     }
     await saveLog(`Entrada NF: ${reason} (${items.length} itens)`, 'MOVIMENTACAO', req.username);
@@ -155,7 +174,7 @@ router.post('/inventory/bulk-move', verifyJWT, async (req, res) => {
 });
 
 // ==========================================
-// ⚓ KITS & PROJETOS
+// ⚓ KITS & PROJETOS (MANTIDOS INTACTOS)
 // ==========================================
 
 router.put('/work-orders/:id/status', verifyJWT, async (req, res) => {
@@ -198,203 +217,102 @@ router.put('/work-orders/:id/status', verifyJWT, async (req, res) => {
     
     await db.query('UPDATE work_orders SET status = $1 WHERE id = $2', [status, id]);
     res.json({ message: 'Status atualizado!' });
-  } catch (err) { 
-    console.error("Erro no processamento de status:", err.message);
-    res.status(500).send(err.message); 
-  }
+  } catch (err) { res.status(500).send(err.message); }
 });
 
 router.get('/work-orders', verifyJWT, async (req, res) => {
   const { status, date } = req.query;
   let query = 'SELECT * FROM work_orders WHERE 1=1';
   let params = [];
-
-  if (status) {
-    params.push(status);
-    query += ` AND status = $${params.length}`;
-  }
-
-  if (date) {
-    params.push(`${date} 00:00:00`, `${date} 23:59:59`);
-    query += ` AND created_at BETWEEN $${params.length - 1} AND $${params.length}`;
-  }
-
+  if (status) { params.push(status); query += ` AND status = $${params.length}`; }
+  if (date) { params.push(`${date} 00:00:00`, `${date} 23:59:59`); query += ` AND created_at BETWEEN $${params.length - 1} AND $${params.length}`; }
   query += ' ORDER BY priority DESC, created_at DESC';
-  
-  try {
-    const result = await db.query(query, params);
-    res.json(result.rows);
-  } catch (err) { res.status(500).send(err.message); }
+  try { res.json((await db.query(query, params)).rows); } catch (err) { res.status(500).send(err.message); }
 });
 
 router.get('/work-orders/:id', verifyJWT, async (req, res) => {
     try {
       const result = await db.query('SELECT * FROM work_orders WHERE id = $1', [req.params.id]);
-      if (result.rows.length > 0) {
-        res.json(result.rows[0]);
-      } else {
-        res.status(404).json({ message: 'Ordem não encontrada.' });
-      }
+      if (result.rows.length > 0) res.json(result.rows[0]);
+      else res.status(404).json({ message: 'Ordem não encontrada.' });
     } catch (err) { res.status(500).send(err.message); }
-  });
+});
 
 router.post('/work-orders', verifyJWT, async (req, res) => {
   const { name, type, items, priority } = req.body;
   const order = await db.query('INSERT INTO work_orders (name, type, status, priority) VALUES ($1, $2, $3, $4) RETURNING id', [name, type, 'pendente', priority]);
-  const orderId = order.rows[0].id;
-  for (let item of items) {
-    await db.query('INSERT INTO work_order_items (work_order_id, item_id, quantity) VALUES ($1, $2, $3)', [orderId, item.id, item.quantity]);
-  }
+  for (let item of items) await db.query('INSERT INTO work_order_items (work_order_id, item_id, quantity) VALUES ($1, $2, $3)', [order.rows[0].id, item.id, item.quantity]);
   await saveLog(`Criado ${type}: ${name}`, 'OPERACAO', req.username);
-  res.json({ id: orderId });
+  res.json({ id: order.rows[0].id });
 });
 
 router.get('/work-orders/:id/items', verifyJWT, async (req, res) => {
-  const result = await db.query('SELECT i.id, i.name, i.sku, woi.quantity FROM work_order_items woi JOIN inventory_items i ON i.id = woi.item_id WHERE woi.work_order_id = $1', [req.params.id]);
-  res.json(result.rows);
+  res.json((await db.query('SELECT i.id, i.name, i.sku, woi.quantity FROM work_order_items woi JOIN inventory_items i ON i.id = woi.item_id WHERE woi.work_order_id = $1', [req.params.id])).rows);
 });
 
 router.put('/work-orders/:id', verifyJWT, async (req, res) => {
-  const { id } = req.params;
-  const { name, priority, items } = req.body;
-
+  const { id } = req.params; const { name, priority, items } = req.body;
   try {
-    await db.query(
-      'UPDATE work_orders SET name = $1, priority = $2 WHERE id = $3',
-      [name, priority, id]
-    );
-
+    await db.query('UPDATE work_orders SET name = $1, priority = $2 WHERE id = $3', [name, priority, id]);
     await db.query('DELETE FROM work_order_items WHERE work_order_id = $1', [id]);
-    
-    for (let item of items) {
-      await db.query(
-        'INSERT INTO work_order_items (work_order_id, item_id, quantity) VALUES ($1, $2, $3)',
-        [id, item.id, item.quantity]
-      );
-    }
-
+    for (let item of items) await db.query('INSERT INTO work_order_items (work_order_id, item_id, quantity) VALUES ($1, $2, $3)', [id, item.id, item.quantity]);
     await saveLog(`Editado OS-${id}: ${name} (Prioridade: ${priority})`, 'OPERACAO', req.username);
     res.json({ message: 'Ordem de serviço atualizada com sucesso!' });
-  } catch (err) {
-    console.error("Erro ao atualizar OS:", err.message);
-    res.status(500).send(err.message);
-  }
+  } catch (err) { res.status(500).send(err.message); }
 });
 
 router.delete('/work-orders/:id', verifyJWT, async (req, res) => {
     const { id } = req.params;
     try {
-      const check = await db.query('SELECT status FROM work_orders WHERE id = $1', [id]);
-      if (check.rows[0].status === 'entregue') {
-        return res.status(403).send("Não é possível cancelar uma ordem que já foi entregue.");
-      }
+      if ((await db.query('SELECT status FROM work_orders WHERE id = $1', [id])).rows[0].status === 'entregue') return res.status(403).send("Não pode cancelar ordem entregue.");
       await db.query('DELETE FROM work_order_items WHERE work_order_id = $1', [id]);
       await db.query('DELETE FROM work_orders WHERE id = $1', [id]);
       await saveLog(`Ordem OS-${id} cancelada`, 'SISTEMA', req.username);
       res.json({ message: 'Cancelado com sucesso' });
     } catch (err) { res.status(500).send(err.message); }
-  });
+});
 
 // ==========================================
-// 📊 ANALYTICS & DASHBOARD 
+// 📊 ANALYTICS & DASHBOARD (MANTIDOS INTACTOS)
 // ==========================================
 
 router.get('/dashboard-stats', verifyJWT, async (req, res) => {
   try {
-    const kits = await db.query("SELECT COUNT(*) as total, EXISTS(SELECT 1 FROM work_orders WHERE type='kit' AND status='pendente') as pending FROM work_orders WHERE type='kit' AND status != 'entregue'");
-    const projetos = await db.query("SELECT COUNT(*) as total, EXISTS(SELECT 1 FROM work_orders WHERE type='pedido' AND status='pendente') as pending FROM work_orders WHERE type='pedido' AND status != 'entregue'");
-    const critical = await db.query("SELECT COUNT(*) FROM inventory_items WHERE alert_minimum > 0 AND virtual_stock < alert_minimum");
-    res.json({ kits: kits.rows[0], projetos: projetos.rows[0], criticalCount: parseInt(critical.rows[0].count) });
+    res.json({
+      kits: (await db.query("SELECT COUNT(*) as total, EXISTS(SELECT 1 FROM work_orders WHERE type='kit' AND status='pendente') as pending FROM work_orders WHERE type='kit' AND status != 'entregue'")).rows[0],
+      projetos: (await db.query("SELECT COUNT(*) as total, EXISTS(SELECT 1 FROM work_orders WHERE type='pedido' AND status='pendente') as pending FROM work_orders WHERE type='pedido' AND status != 'entregue'")).rows[0],
+      criticalCount: parseInt((await db.query("SELECT COUNT(*) FROM inventory_items WHERE alert_minimum > 0 AND virtual_stock < alert_minimum")).rows[0].count)
+    });
   } catch (err) { res.status(500).send(err.message); }
 });
 
 router.get('/analytics/history', verifyJWT, async (req, res) => {
   const { period, category } = req.query;
-  let interval = '7 days';
-  let grouping = 'day';
-
+  let interval = '7 days'; let grouping = 'day';
   if (period === '30 DIAS') interval = '30 days';
   if (period === '6 MESES') { interval = '6 months'; grouping = 'month'; }
   if (period === '1 ANO') { interval = '1 year'; grouping = 'month'; }
-
-  let query = `
-    SELECT 
-      TO_CHAR(DATE_TRUNC($1, created_at), ${grouping === 'day' ? "'DD/MM'" : "'MM/YY'"}) as label,
-      SUM(ABS(quantity)) as volume
-    FROM inventory_movements
-    WHERE type = 'fisico' 
-      AND created_at >= CURRENT_DATE - CAST($2 AS INTERVAL)
-  `;
+  let query = `SELECT TO_CHAR(DATE_TRUNC($1, created_at), ${grouping === 'day' ? "'DD/MM'" : "'MM/YY'"}) as label, SUM(ABS(quantity)) as volume FROM inventory_movements WHERE type = 'fisico' AND created_at >= CURRENT_DATE - CAST($2 AS INTERVAL)`;
   let params = [grouping, interval];
-
-  if (category && category !== 'TODAS') {
-    params.push(category);
-    query += ` AND category = $3`;
-  }
-
+  if (category && category !== 'TODAS') { params.push(category); query += ` AND category = $3`; }
   query += ` GROUP BY 1 ORDER BY MIN(created_at) ASC`;
-
-  try {
-    const result = await db.query(query, params);
-    res.json(result.rows);
-  } catch (err) { 
-    console.error("Erro no gráfico histórico:", err.message);
-    res.status(500).send(err.message); 
-  }
+  try { res.json((await db.query(query, params)).rows); } catch (err) { res.status(500).send(err.message); }
 });
 
 router.get('/logs', verifyJWT, async (req, res) => {
   const { startDate, endDate, category, search, limit } = req.query;
-  let query = 'SELECT * FROM logs WHERE 1=1';
-  let params = [];
-
-  if (category && category !== 'TODAS') { 
-    params.push(category); 
-    query += ` AND category = $${params.length}`; 
-  }
-  
-  if (startDate) { 
-    params.push(`${startDate} 00:00:00`); 
-    query += ` AND created_at >= $${params.length}`; 
-  }
-  
-  if (endDate) { 
-    params.push(`${endDate} 23:59:59`); 
-    query += ` AND created_at <= $${params.length}`; 
-  }
-
-  if (search && search.trim() !== '') {
-    params.push(`%${search.trim().toLowerCase()}%`);
-    query += ` AND LOWER(description) LIKE $${params.length}`;
-  }
-
+  let query = 'SELECT * FROM logs WHERE 1=1'; let params = [];
+  if (category && category !== 'TODAS') { params.push(category); query += ` AND category = $${params.length}`; }
+  if (startDate) { params.push(`${startDate} 00:00:00`); query += ` AND created_at >= $${params.length}`; }
+  if (endDate) { params.push(`${endDate} 23:59:59`); query += ` AND created_at <= $${params.length}`; }
+  if (search && search.trim() !== '') { params.push(`%${search.trim().toLowerCase()}%`); query += ` AND LOWER(description) LIKE $${params.length}`; }
   query += ` ORDER BY created_at DESC LIMIT ${limit || 1000}`;
-  
-  try {
-    const result = await db.query(query, params);
-    res.json(result.rows);
-  } catch (error) {
-    res.status(500).send(error.message);
-  }
+  try { res.json((await db.query(query, params)).rows); } catch (err) { res.status(500).send(err.message); }
 });
 
-// ⚓ A TIMELINE AGORA BUSCA TAMBÉM O USERNAME
 router.get('/analytics/timeline', verifyJWT, async (req, res) => {
-  try {
-    const query = `
-      SELECT id, description, category, username, created_at
-      FROM logs
-      WHERE category IN ('OPERACAO', 'MOVIMENTACAO', 'SISTEMA', 'INVENTARIO')
-      ORDER BY created_at DESC
-      LIMIT 10
-    `;
-    
-    const result = await db.query(query);
-    res.json(result.rows);
-  } catch (err) {
-    console.error("Erro na rota da Timeline:", err.message);
-    res.status(500).send("Erro ao processar dados da linha do tempo.");
-  }
+  try { res.json((await db.query(`SELECT id, description, category, username, created_at FROM logs WHERE category IN ('OPERACAO', 'MOVIMENTACAO', 'SISTEMA', 'INVENTARIO') ORDER BY created_at DESC LIMIT 10`)).rows); } 
+  catch (err) { res.status(500).send("Erro ao processar dados da linha do tempo."); }
 });
 
 module.exports = router;
