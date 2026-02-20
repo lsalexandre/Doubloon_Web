@@ -7,7 +7,6 @@ export default function WorkOrders({ tipoLabel, dbType }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [viewItems, setViewItems] = useState(null);
   
-  // ⚓ Função corrigida para usar o fuso horário LOCAL (GMT-3 de Vacaria)
   const getTodayString = () => {
     const today = new Date();
     const tzOffset = today.getTimezoneOffset() * 60000; 
@@ -15,19 +14,14 @@ export default function WorkOrders({ tipoLabel, dbType }) {
     return localISOTime.split('T')[0];
   };
 
-  // ⚓ Novos Estados para a Aba de Entregues (Iniciando no dia correto)
   const [showArchived, setShowArchived] = useState(false);
   const [archiveDate, setArchiveDate] = useState(getTodayString());
-
-  // Estados para Criação / Edição
   const [editingId, setEditingId] = useState(null); 
   const [formData, setFormData] = useState({ name: '', priority: 1 });
   const [stagedItems, setStagedItems] = useState([]); 
   const [currentItem, setCurrentItem] = useState('');
   const [currentQty, setCurrentQty] = useState(1);
   const [searchItem, setSearchItem] = useState('');
-
-  // ⚓ Sistema de Notificação
   const [toast, setToast] = useState({ show: false, msg: '', type: 'success' });
   const [confirmDialog, setConfirmDialog] = useState({ show: false, msg: '', onConfirm: null });
 
@@ -54,7 +48,6 @@ export default function WorkOrders({ tipoLabel, dbType }) {
       }
       setOrders(filteredOrders);
 
-      // ⚓ Busca filtrada por data na aba de Arquivo
       if (showArchived) {
         const rArchive = await fetch(`https://doubloonsystem.onrender.com/api/work-orders?status=entregue&date=${archiveDate}`, {
           headers: { 'x-access-token': localStorage.getItem('token') }
@@ -111,7 +104,7 @@ export default function WorkOrders({ tipoLabel, dbType }) {
   const mudarStatus = async (id, novoStatus) => {
     const isEstorno = novoStatus === 'pendente';
     const msg = isEstorno 
-      ? `Devolver o status para PENDENTE e estornar o estoque virtual desta Ordem?` 
+      ? `Devolver o status para PENDENTE e estornar o estoque desta Ordem?` 
       : `Confirmar mudança de status para ${novoStatus.toUpperCase()}?`;
 
     requestConfirm(msg, async () => {
@@ -125,7 +118,7 @@ export default function WorkOrders({ tipoLabel, dbType }) {
           body: JSON.stringify({ status: novoStatus })
         });
         if(res.ok){
-           showToast(isEstorno ? "Estoque virtual estornado com sucesso!" : `Status atualizado: ${novoStatus.toUpperCase()}`);
+           showToast(isEstorno ? "Estoque estornado com sucesso!" : `Status atualizado: ${novoStatus.toUpperCase()}`);
            load();
         } else {
            showToast("Erro ao tentar alterar o status.", "error");
@@ -189,7 +182,6 @@ export default function WorkOrders({ tipoLabel, dbType }) {
   return (
     <div className="p-8 bg-[#0f172a] min-h-screen text-gray-200 relative">
       
-      {/* ⚓ TOAST E MODAL CUSTOMIZADO */}
       {toast.show && (
         <div className={`fixed top-10 right-10 p-4 border-l-4 shadow-2xl z-[200] animate-fade-in flex items-center gap-3 ${toast.type === 'error' ? 'bg-[#1a0a0f] border-red-500 text-red-500' : 'bg-[#0a1f24] border-[#00e5ff] text-[#00e5ff]'}`}>
           {toast.type === 'error' ? <X size={20} /> : <CheckCircle size={20} />}
@@ -211,7 +203,6 @@ export default function WorkOrders({ tipoLabel, dbType }) {
         </div>
       )}
 
-      {/* HEADER E CONTROLES DE ABA */}
       <div className="flex justify-between items-end mb-10 border-b border-gray-800 pb-6 print:hidden">
         <div>
           <h1 className="text-3xl font-black text-[#00e5ff] uppercase tracking-widest flex items-center gap-3">
@@ -222,7 +213,6 @@ export default function WorkOrders({ tipoLabel, dbType }) {
         </div>
         
         <div className="flex gap-4 items-center">
-          {/* ⚓ Estética Melhorada do Calendário */}
           {showArchived && (
             <div className="flex items-center gap-2 mr-2 bg-[#1e293b] border border-gray-700 px-3 py-1.5 hover:border-[#00e5ff] transition-all">
               <Calendar size={14} className="text-[#00e5ff]"/>
@@ -250,12 +240,24 @@ export default function WorkOrders({ tipoLabel, dbType }) {
         </div>
       </div>
 
-      {/* GRID DE CARDS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 print:hidden">
         {orders.map(o => (
           <div key={o.id} className={`bg-[#1e293b] border-t-4 p-6 shadow-xl flex flex-col justify-between min-h-[220px] relative overflow-hidden group ${o.priority === 3 ? 'border-red-500' : o.priority === 2 ? 'border-yellow-500' : 'border-gray-700'}`}>
             
             {showArchived && <div className="absolute top-0 right-0 bg-[#0f172a]/50 w-full h-full z-0 pointer-events-none"></div>}
+
+            <div className="relative z-10">
+              <div className="flex justify-between text-[9px] font-black uppercase mb-4">
+                <span className="text-gray-500 bg-[#0f172a] px-2 py-1 rounded-sm border border-gray-800">OS-{o.id}</span>
+                <span className={`px-2 py-1 rounded-sm flex items-center gap-1 ${
+                  o.status === 'pendente' ? 'bg-yellow-500/10 border border-yellow-500/30 text-yellow-500' : 
+                  o.status === 'separado' ? 'bg-[#00e5ff]/10 border border-[#00e5ff]/30 text-[#00e5ff]' : 'bg-green-500/10 border border-green-500/30 text-green-500'
+                }`}>
+                  {o.status === 'entregue' && <CheckCircle size={10}/>} {o.status}
+                </span>
+              </div>
+              <h3 className={`text-lg font-black uppercase mb-6 leading-tight ${showArchived ? 'text-gray-400' : 'text-white'}`}>{o.name}</h3>
+            </div>
 
             <div className="space-y-2 relative z-10">
               <div className="flex gap-2">
@@ -289,13 +291,13 @@ export default function WorkOrders({ tipoLabel, dbType }) {
                   </button>
                 </div>
               )}
-              {/* ⚓ NOVO: BOTÃO DE ESTORNO DE ENTREGA (Aparece apenas na aba de Entregues/Arquivo) */}
               {o.status === 'entregue' && showArchived && (
                 <button onClick={() => mudarStatus(o.id, 'pendente')} className="w-full bg-red-900/50 border border-red-500/50 text-red-300 py-2.5 text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-red-600 hover:text-white transition-all mt-2">
                   <RotateCcw size={14} /> Estornar Entrega (Devolver Físico)
                 </button>
               )}
             </div>
+          </div>
         ))}
 
         {orders.length === 0 && (
@@ -309,7 +311,6 @@ export default function WorkOrders({ tipoLabel, dbType }) {
         )}
       </div>
 
-      {/* MODAL CRIAÇÃO/EDIÇÃO */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 animate-fade-in">
           <div className="bg-[#1e293b] border border-[#00e5ff] w-full max-w-2xl p-10 shadow-[0_0_50px_rgba(0,229,255,0.2)] relative">
@@ -371,7 +372,6 @@ export default function WorkOrders({ tipoLabel, dbType }) {
         </div>
       )}
 
-      {/* MODAL DE IMPRESSÃO / VISUALIZAÇÃO */}
       {viewItems && (
         <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-50 p-4 animate-fade-in">
           <div className="bg-white text-black w-full max-w-2xl p-10 shadow-2xl relative">
@@ -400,7 +400,6 @@ export default function WorkOrders({ tipoLabel, dbType }) {
               </p>
             </div>
 
-            {/* ⚓ DIV DE SCROLL ADICIONADA AQUI */}
             <div className="max-h-[50vh] overflow-y-auto custom-scrollbar mb-12 print:max-h-none print:overflow-visible">
               <table className="w-full text-left border-collapse">
                 <thead className="sticky top-0 bg-white shadow-sm z-10 print:static print:shadow-none">
@@ -425,7 +424,6 @@ export default function WorkOrders({ tipoLabel, dbType }) {
                 </tbody>
               </table>
             </div>
-            {/* ⚓ FIM DA DIV DE SCROLL */}
 
             <div className="mt-20 border-t-2 border-black pt-4 flex justify-between items-center text-[9px] uppercase font-black tracking-widest">
               <div>Vacaria Operations - Sistema Doubloon</div>
