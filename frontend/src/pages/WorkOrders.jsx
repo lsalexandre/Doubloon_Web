@@ -408,28 +408,32 @@ export default function WorkOrders({ tipoLabel, dbType }) {
               </p>
             </div>
 
-            <table className="w-full text-left border-collapse mb-12">
-              <thead>
-                <tr className="border-b-2 border-black text-[10px] uppercase font-black bg-gray-100">
-                  <th className="py-3 px-2">Código SKU</th>
-                  <th className="py-3 px-2">Descrição do Material</th>
-                  <th className="text-center py-3 px-2">Volume/Qtd</th>
-                  <th className="text-center py-3 px-2 print:hidden">Check</th>
-                </tr>
-              </thead>
-              <tbody>
-                {viewItems.list.map((li, i) => (
-                  <tr key={i} className="border-b border-gray-200 text-sm">
-                    <td className="py-4 px-2 font-mono text-xs text-gray-600">{li.sku}</td>
-                    <td className="py-4 px-2 font-black uppercase">{li.name}</td>
-                    <td className="py-4 px-2 text-center font-black text-lg">{li.quantity}</td>
-                    <td className="py-4 px-2 text-center print:hidden">
-                       <input type="checkbox" className="w-5 h-5 accent-black cursor-pointer" />
-                    </td>
+            {/* ⚓ DIV DE SCROLL ADICIONADA AQUI */}
+            <div className="max-h-[50vh] overflow-y-auto custom-scrollbar mb-12 print:max-h-none print:overflow-visible">
+              <table className="w-full text-left border-collapse">
+                <thead className="sticky top-0 bg-white shadow-sm z-10 print:static print:shadow-none">
+                  <tr className="border-b-2 border-black text-[10px] uppercase font-black bg-gray-100">
+                    <th className="py-3 px-2">Código SKU</th>
+                    <th className="py-3 px-2">Descrição do Material</th>
+                    <th className="text-center py-3 px-2">Volume/Qtd</th>
+                    <th className="text-center py-3 px-2 print:hidden">Check</th>
                   </tr>
-                ))}
-              </tbody>
-            </table>
+                </thead>
+                <tbody>
+                  {viewItems.list.map((li, i) => (
+                    <tr key={i} className="border-b border-gray-200 text-sm hover:bg-gray-50 transition-colors">
+                      <td className="py-4 px-2 font-mono text-xs text-gray-600">{li.sku}</td>
+                      <td className="py-4 px-2 font-black uppercase">{li.name}</td>
+                      <td className="py-4 px-2 text-center font-black text-lg">{li.quantity}</td>
+                      <td className="py-4 px-2 text-center print:hidden">
+                         <input type="checkbox" className="w-5 h-5 accent-black cursor-pointer" />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {/* ⚓ FIM DA DIV DE SCROLL */}
 
             <div className="mt-20 border-t-2 border-black pt-4 flex justify-between items-center text-[9px] uppercase font-black tracking-widest">
               <div>Vacaria Operations - Sistema Doubloon</div>
