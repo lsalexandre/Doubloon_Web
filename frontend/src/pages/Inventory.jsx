@@ -63,7 +63,7 @@ export default function Inventory() {
     setIsModalOpen(true);
   };
 
- const executeExcluir = async (id) => {
+  const executeExcluir = async (id) => {
     try {
       const response = await fetch(`https://doubloonsystem.onrender.com/api/inventory/${id}`, {
         method: 'DELETE',
@@ -71,7 +71,6 @@ export default function Inventory() {
       });
       
       if (response.ok) {
-        // ⚓ Mensagem atualizada para refletir a exclusão lógica
         showToast("Peça excluída e ocultada do sistema!", "success");
         carregar();
       } else {
@@ -119,7 +118,6 @@ export default function Inventory() {
                   (i.sku || '').toLowerCase().includes(term) || 
                   (i.category || '').toLowerCase().includes(term);
                   
-    // ⚓ Lógica de Filtro Crítico (Integrado com Dashboard)
     if (query.get('filter') === 'critical') {
       return match && i.alert_minimum > 0 && i.virtual_stock < i.alert_minimum;
     }
@@ -127,11 +125,10 @@ export default function Inventory() {
   });
 
   return (
-    <div className="p-8 bg-[#0f172a] min-h-screen text-gray-200 relative animate-fade-in">
+    <div className="p-4 md:p-8 bg-[#0f172a] min-h-screen text-gray-200 relative animate-fade-in">
       
-      {/* TOASTS E MODAIS DE CONFIRMAÇÃO */}
       {toast.show && (
-        <div className={`fixed top-10 right-10 p-4 border-l-4 shadow-2xl z-[200] animate-fade-in flex items-center gap-3 ${toast.type === 'error' ? 'bg-[#1a0a0f] border-red-500 text-red-500' : 'bg-[#0a1f24] border-[#00e5ff] text-[#00e5ff]'}`}>
+        <div className={`fixed top-10 right-4 md:right-10 p-4 border-l-4 shadow-2xl z-[200] animate-fade-in flex items-center gap-3 ${toast.type === 'error' ? 'bg-[#1a0a0f] border-red-500 text-red-500' : 'bg-[#0a1f24] border-[#00e5ff] text-[#00e5ff]'}`}>
           {toast.type === 'error' ? <X size={20} /> : <CheckCircle size={20} />}
           <span className="text-[10px] font-black uppercase tracking-widest">{toast.msg}</span>
         </div>
@@ -143,29 +140,31 @@ export default function Inventory() {
             <AlertTriangle size={48} className="text-[#00e5ff] mx-auto mb-6" />
             <h3 className="text-white font-black uppercase tracking-widest mb-2 text-lg">Confirmação</h3>
             <p className="text-gray-400 text-xs mb-8">{confirmDialog.msg}</p>
-            <div className="flex gap-4">
-              <button onClick={() => setConfirmDialog({ show: false, msg: '', onConfirm: null })} className="flex-1 bg-gray-800 text-white py-3 text-[10px] font-black uppercase tracking-widest hover:bg-[#00e5ff] transition-all">Cancelar</button>
-              <button onClick={() => { confirmDialog.onConfirm(); setConfirmDialog({ show: false, msg: '', onConfirm: null }); }} className="flex-1 bg-red-600 text-white py-3 text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-red-600 transition-all">Confirmar</button>
+            <div className="flex flex-col gap-4">
+              <button onClick={() => setConfirmDialog({ show: false, msg: '', onConfirm: null })} className="w-full bg-gray-800 text-white py-3 text-[10px] font-black uppercase tracking-widest hover:bg-[#00e5ff] transition-all">Cancelar</button>
+              <button onClick={() => { confirmDialog.onConfirm(); setConfirmDialog({ show: false, msg: '', onConfirm: null }); }} className="w-full bg-red-600 text-white py-3 text-[10px] font-black uppercase tracking-widest hover:bg-white hover:text-red-600 transition-all">Confirmar</button>
             </div>
           </div>
         </div>
       )}
 
-      <div className="flex justify-between items-end mb-10 border-b border-gray-800 pb-6">
+      {/* ⚓ RESPONSIVO: Header empilha no celular e fica lado a lado no PC */}
+      <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-6 mb-10 border-b border-gray-800 pb-6">
         <div>
-          <h1 className="text-3xl font-black text-[#00e5ff] uppercase tracking-[0.2em]">Inventário Geral</h1>
-          <div className="mt-4 relative">
+          <h1 className="text-2xl md:text-3xl font-black text-[#00e5ff] uppercase tracking-[0.2em]">Inventário Geral</h1>
+          <div className="mt-4 relative w-full md:w-80">
             <Search className="absolute left-3 top-2.5 text-[#00e5ff]" size={16} />
-            <input type="text" placeholder="BUSCAR POR SKU, NOME OU CATEGORIA..." className="bg-[#0f172a] border border-gray-700 pl-10 pr-4 py-2 text-[10px] font-bold w-80 outline-none focus:border-[#00e5ff] uppercase text-white" value={search} onChange={(e) => setSearch(e.target.value)} />
+            <input type="text" placeholder="BUSCAR POR SKU, NOME..." className="bg-[#0f172a] border border-gray-700 pl-10 pr-4 py-2 text-[10px] font-bold w-full outline-none focus:border-[#00e5ff] uppercase text-white" value={search} onChange={(e) => setSearch(e.target.value)} />
           </div>
         </div>
-        <button onClick={handleOpenNew} className="bg-[#00e5ff] text-black px-6 py-2.5 font-black uppercase text-[10px] tracking-widest hover:bg-white transition-all shadow-lg flex items-center gap-2">
+        <button onClick={handleOpenNew} className="w-full md:w-auto bg-[#00e5ff] text-black px-6 py-3 font-black uppercase text-[10px] tracking-widest hover:bg-white transition-all shadow-lg flex items-center justify-center gap-2">
           <Plus size={14} /> Catalogar Nova Peça
         </button>
       </div>
 
-      <div className="bg-[#1e293b] border border-gray-800 rounded-sm overflow-hidden shadow-2xl">
-        <table className="w-full text-left text-xs border-collapse">
+      {/* ⚓ RESPONSIVO: overflow-x-auto cria a rolagem lateral na tabela */}
+      <div className="bg-[#1e293b] border border-gray-800 rounded-sm overflow-x-auto shadow-2xl custom-scrollbar">
+        <table className="w-full text-left text-xs border-collapse min-w-[700px]">
           <thead className="bg-[#0f172a] text-gray-500 uppercase font-black tracking-widest border-b border-gray-800">
             <tr>
               <th className="p-4">SKU / Identificação</th>
@@ -208,8 +207,8 @@ export default function Inventory() {
       {/* MODAL CATALOGAÇÃO / EDIÇÃO */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-black/95 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#1e293b] border border-[#00e5ff] w-full max-w-md p-10 shadow-[0_0_50px_rgba(0,229,255,0.2)] relative">
-            <button onClick={() => setIsModalOpen(false)} className="absolute top-6 right-6 text-gray-400 hover:text-white transition-colors"><X size={20}/></button>
+          <div className="bg-[#1e293b] border border-[#00e5ff] w-full max-w-md p-6 md:p-10 shadow-[0_0_50px_rgba(0,229,255,0.2)] relative">
+            <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 md:top-6 md:right-6 text-gray-400 hover:text-white transition-colors"><X size={20}/></button>
             <h2 className="text-[#00e5ff] font-black uppercase text-sm mb-8 tracking-[0.2em] flex items-center gap-2 border-b border-gray-800 pb-4">
               {editingId ? <Edit2 size={18}/> : <Plus size={18}/>}
               {editingId ? 'Editar Propriedades' : 'Cadastrar Material'}
@@ -234,9 +233,9 @@ export default function Inventory() {
                     <option value="NEW" className="text-[#00e5ff] font-black">+ CRIAR NOVA CATEGORIA</option>
                   </select>
                 ) : (
-                  <div className="flex gap-2">
+                  <div className="flex flex-col md:flex-row gap-2">
                     <input required autoFocus placeholder="NOME DA CATEGORIA" className="flex-1 bg-[#0f172a] border border-[#00e5ff] p-3 text-white text-xs uppercase outline-none" onChange={e => setFormData({...formData, category: e.target.value})} />
-                    <button type="button" onClick={() => { setIsCreatingNewCat(false); setFormData({...formData, category: ''}) }} className="bg-red-500/10 text-red-500 px-4 hover:bg-red-500 hover:text-white transition-all border border-red-500/30"><X size={16}/></button>
+                    <button type="button" onClick={() => { setIsCreatingNewCat(false); setFormData({...formData, category: ''}) }} className="bg-red-500/10 text-red-500 p-3 hover:bg-red-500 hover:text-white transition-all border border-red-500/30 flex justify-center"><X size={16}/></button>
                   </div>
                 )}
               </div>

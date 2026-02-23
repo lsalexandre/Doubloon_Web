@@ -9,20 +9,16 @@ export default function Movements() {
   const [reason, setReason] = useState('');
   const [operation, setOperation] = useState('entrada');
   
-  // Modais
   const [isNFModalOpen, setIsNFModalOpen] = useState(false);
   const [isRetroModalOpen, setIsRetroModalOpen] = useState(false);
   
-  // NF State
   const [nfReason, setNfReason] = useState('');
   const [nfItems, setNfItems] = useState([]);
   const [nfSearch, setNfSearch] = useState('');
 
-  // Retroativo State
   const [retroData, setRetroData] = useState({ itemId: '', quantity: 0, operation: 'saida', reason: '', date: '' });
   const [retroSearch, setRetroSearch] = useState('');
 
-  // ⚓ Sistema Customizado de Alertas e Confirmações
   const [toast, setToast] = useState({ show: false, msg: '', type: 'success' });
   const [confirmDialog, setConfirmDialog] = useState({ show: false, msg: '', onConfirm: null });
 
@@ -50,7 +46,6 @@ export default function Movements() {
   const filteredNfItems = items.filter(i => i.name.toLowerCase().includes(nfSearch.toLowerCase()) || i.sku.toLowerCase().includes(nfSearch.toLowerCase()));
   const filteredRetroItems = items.filter(i => i.name.toLowerCase().includes(retroSearch.toLowerCase()) || i.sku.toLowerCase().includes(retroSearch.toLowerCase()));
 
-  // ⚓ Disparo Seguro de Movimentação (Imune a HTML feio)
   const executeMove = async (payload, successMsg) => {
     try {
       const res = await fetch('https://doubloonsystem.onrender.com/api/inventory/move', {
@@ -79,7 +74,6 @@ export default function Movements() {
     }
   };
 
-  // 1. Movimentação Avulsa (Moderna e com Toast)
   const handleSimpleMove = (e) => {
     e.preventDefault();
     if (!selectedItem || quantity <= 0 || !reason) return showToast("Preencha todos os campos!", "error");
@@ -90,7 +84,6 @@ export default function Movements() {
     });
   };
 
-  // 2. Lançamento Retroativo (Novo Recurso)
   const handleRetroMove = (e) => {
     e.preventDefault();
     if (!retroData.itemId || retroData.quantity <= 0 || !retroData.reason || !retroData.date) return showToast("Preencha todos os campos e a data!", "error");
@@ -104,7 +97,6 @@ export default function Movements() {
     });
   };
 
-  // 3. Nota Fiscal (Moderna e com Toast)
   const addNfItem = () => {
     if (!selectedItem || quantity <= 0) return;
     const item = items.find(i => i.id === parseInt(selectedItem));
@@ -134,54 +126,52 @@ export default function Movements() {
   };
 
   return (
-    <div className="p-8 bg-[#0f172a] min-h-screen text-gray-200 relative">
+    <div className="p-4 md:p-8 bg-[#0f172a] min-h-screen text-gray-200 relative">
       
-      {/* ⚓ TOAST NOTIFICATION */}
       {toast.show && (
-        <div className={`fixed top-10 right-10 p-4 border-l-4 shadow-2xl z-[200] animate-fade-in flex items-center gap-3 ${toast.type === 'error' ? 'bg-[#1a0a0f] border-red-500 text-red-500' : 'bg-[#0a1f24] border-[#00e5ff] text-[#00e5ff]'}`}>
+        <div className={`fixed top-10 right-4 md:right-10 p-4 border-l-4 shadow-2xl z-[200] animate-fade-in flex items-center gap-3 ${toast.type === 'error' ? 'bg-[#1a0a0f] border-red-500 text-red-500' : 'bg-[#0a1f24] border-[#00e5ff] text-[#00e5ff]'}`}>
           {toast.type === 'error' ? <X size={20} /> : <CheckCircle size={20} />}
           <span className="text-[10px] font-black uppercase tracking-widest">{toast.msg}</span>
         </div>
       )}
 
-      {/* ⚓ MODAL DE CONFIRMAÇÃO */}
       {confirmDialog.show && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-[150] p-4 animate-fade-in">
-          <div className="bg-[#1e293b] border border-[#00e5ff] p-8 max-w-sm w-full text-center shadow-[0_0_50px_rgba(0,229,255,0.1)]">
+          <div className="bg-[#1e293b] border border-[#00e5ff] p-6 md:p-8 max-w-sm w-full text-center shadow-[0_0_50px_rgba(0,229,255,0.1)]">
             <AlertTriangle size={48} className="text-[#00e5ff] mx-auto mb-6" />
             <h3 className="text-white font-black uppercase tracking-widest mb-2 text-lg">Confirmação</h3>
             <p className="text-gray-400 text-xs mb-8">{confirmDialog.msg}</p>
-            <div className="flex gap-4">
-              <button onClick={() => setConfirmDialog({ show: false, msg: '', onConfirm: null })} className="flex-1 bg-gray-800 text-white py-3 text-[10px] font-black uppercase tracking-widest hover:bg-[#00e5ff] hover:text-black transition-all">Cancelar</button>
-              <button onClick={() => { confirmDialog.onConfirm(); setConfirmDialog({ show: false, msg: '', onConfirm: null }); }} className="flex-1 bg-[#00e5ff] text-black py-3 text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-lg">Confirmar</button>
+            <div className="flex flex-col gap-4">
+              <button onClick={() => setConfirmDialog({ show: false, msg: '', onConfirm: null })} className="w-full bg-gray-800 text-white py-3 text-[10px] font-black uppercase tracking-widest hover:bg-[#00e5ff] hover:text-black transition-all">Cancelar</button>
+              <button onClick={() => { confirmDialog.onConfirm(); setConfirmDialog({ show: false, msg: '', onConfirm: null }); }} className="w-full bg-[#00e5ff] text-black py-3 text-[10px] font-black uppercase tracking-widest hover:bg-white transition-all shadow-lg">Confirmar</button>
             </div>
           </div>
         </div>
       )}
 
-      {/* HEADER */}
-      <div className="flex justify-between items-end mb-10">
+      {/* ⚓ RESPONSIVO: Header */}
+      <div className="flex flex-col md:flex-row md:justify-between md:items-end gap-6 mb-10">
         <div>
-          <h1 className="text-3xl font-black text-[#00e5ff] uppercase tracking-widest">Movimentações</h1>
+          <h1 className="text-2xl md:text-3xl font-black text-[#00e5ff] uppercase tracking-widest">Movimentações</h1>
           <p className="text-[10px] text-gray-500 font-bold mt-1 uppercase">Controle de Fluxo de Carga</p>
         </div>
-        <div className="flex gap-4">
-          <button onClick={() => setIsRetroModalOpen(true)} className="bg-gray-800 text-white px-6 py-2 font-black uppercase text-[10px] tracking-widest flex items-center gap-2 hover:bg-[#00e5ff] hover:text-black transition-all">
+        <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
+          <button onClick={() => setIsRetroModalOpen(true)} className="w-full sm:w-auto bg-gray-800 text-white px-6 py-3 md:py-2 font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 hover:bg-[#00e5ff] hover:text-black transition-all">
             <CalendarClock size={14}/> Lançamento Passado
           </button>
-          <button onClick={() => setIsNFModalOpen(true)} className="bg-[#00e5ff] text-black px-6 py-2 font-black uppercase text-[10px] tracking-widest flex items-center gap-2 hover:bg-white transition-all shadow-lg">
+          <button onClick={() => setIsNFModalOpen(true)} className="w-full sm:w-auto bg-[#00e5ff] text-black px-6 py-3 md:py-2 font-black uppercase text-[10px] tracking-widest flex items-center justify-center gap-2 hover:bg-white transition-all shadow-lg">
             <FileText size={14}/> Dar Entrada na Nota
           </button>
         </div>
       </div>
 
-      {/* ⚓ FORMULÁRIO CENTRALIZADO (O segredo está no mx-auto) */}
-      <div className="max-w-3xl mx-auto bg-[#1e293b] p-10 border border-gray-800 shadow-2xl mt-10">
+      {/* ⚓ RESPONSIVO: Formulário ajustado para não esmagar grid no celular */}
+      <div className="max-w-3xl mx-auto bg-[#1e293b] p-6 md:p-10 border border-gray-800 shadow-2xl mt-10">
         <h2 className="text-[#00e5ff] font-black uppercase text-sm mb-8 border-b border-gray-800 pb-4 flex items-center gap-2">
           <ArrowUpCircle size={18}/> Movimentação Avulsa Diária
         </h2>
         <form onSubmit={handleSimpleMove} className="space-y-8">
-          <div className="grid grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="text-[10px] font-black text-gray-400 uppercase mb-3 block tracking-widest">Operação</label>
               <select value={operation} onChange={e => setOperation(e.target.value)} className="w-full bg-[#0f172a] p-4 text-xs border border-gray-700 uppercase outline-none focus:border-[#00e5ff] font-bold">
@@ -195,7 +185,7 @@ export default function Movements() {
             </div>
           </div>
           
-          <div className="bg-[#0f172a] p-6 border border-gray-800">
+          <div className="bg-[#0f172a] p-4 md:p-6 border border-gray-800">
             <label className="text-[10px] font-black text-[#00e5ff] uppercase mb-4 block tracking-widest">Localizar e Selecionar Peça</label>
             <div className="flex flex-col gap-3">
               <div className="relative">
@@ -220,10 +210,10 @@ export default function Movements() {
         </form>
       </div>
 
-      {/* ⚓ NOVO MODAL: LANÇAMENTO RETROATIVO */}
+      {/* NOVO MODAL: LANÇAMENTO RETROATIVO */}
       {isRetroModalOpen && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 animate-fade-in">
-          <div className="bg-[#1e293b] border border-[#00e5ff] w-full max-w-xl p-8 shadow-2xl">
+          <div className="bg-[#1e293b] border border-[#00e5ff] w-full max-w-xl p-6 md:p-8 shadow-2xl">
             <div className="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
               <h2 className="text-[#00e5ff] font-black uppercase text-sm tracking-widest flex items-center gap-2">
                 <CalendarClock size={18}/> Ajuste de Data Passada
@@ -231,7 +221,7 @@ export default function Movements() {
               <button onClick={() => setIsRetroModalOpen(false)} className="text-gray-500 hover:text-white"><X/></button>
             </div>
             <form onSubmit={handleRetroMove} className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="text-[9px] font-bold text-gray-400 uppercase mb-2 block">Data Exata da Operação</label>
                   <input type="date" required value={retroData.date} onChange={e => setRetroData({...retroData, date: e.target.value})} className="w-full bg-[#0f172a] p-3 text-xs border border-gray-700 text-white outline-none focus:border-[#00e5ff]" />
@@ -253,12 +243,12 @@ export default function Movements() {
                 </select>
               </div>
 
-              <div className="grid grid-cols-3 gap-4">
-                <div className="col-span-1">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="md:w-1/3">
                   <label className="text-[9px] font-bold text-gray-400 uppercase mb-2 block">Qtd</label>
                   <input type="number" required min="1" value={retroData.quantity === 0 ? '' : retroData.quantity} onChange={e => setRetroData({...retroData, quantity: parseInt(e.target.value) || 0})} className="w-full bg-[#0f172a] p-3 text-xs border border-gray-700 outline-none" />
                 </div>
-                <div className="col-span-2">
+                <div className="flex-1">
                   <label className="text-[9px] font-bold text-gray-400 uppercase mb-2 block">Justificativa do Atraso</label>
                   <input required placeholder="EX: ESQUECIMENTO, SISTEMA OFFLINE..." value={retroData.reason} onChange={e => setRetroData({...retroData, reason: e.target.value})} className="w-full bg-[#0f172a] p-3 text-xs border border-gray-700 uppercase outline-none" />
                 </div>
@@ -272,7 +262,7 @@ export default function Movements() {
       {/* MODAL ENTRADA NA NOTA */}
       {isNFModalOpen && (
         <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 animate-fade-in">
-          <div className="bg-[#1e293b] border border-[#00e5ff] w-full max-w-xl p-8 shadow-[0_0_50px_rgba(0,229,255,0.2)]">
+          <div className="bg-[#1e293b] border border-[#00e5ff] w-full max-w-xl p-6 md:p-8 shadow-[0_0_50px_rgba(0,229,255,0.2)]">
             <div className="flex justify-between items-center mb-6 border-b border-gray-800 pb-4">
               <h2 className="text-[#00e5ff] font-black uppercase text-sm tracking-widest flex items-center gap-2"><FileText size={18}/> Entrada por Nota Fiscal</h2>
               <button onClick={() => setIsNFModalOpen(false)} className="text-gray-500 hover:text-white"><X/></button>
