@@ -197,55 +197,67 @@ router.put('/work-orders/:id/status', verifyJWT, async (req, res) => {
   const { status } = req.body;
   
   try {
-    const current = await db.query('SELECT status FROM work_orders WHERE id = $1', [id]);
+    // 1. Buscamos também o NOME da OS para usar como motivo no Log
+    const current = await db.query('SELECT name, status FROM work_orders WHERE id = $1', [id]);
     if (current.rows.length === 0) return res.status(404).send("Ordem não encontrada");
     
     const currentStatus = current.rows[0].status;
+    const orderName = current.rows[0].name; // Ex: 1660 - IRANI FERNANDES
 
     if (currentStatus === 'pendente' && status === 'separado') {
       const items = await db.query('SELECT item_id, quantity FROM work_order_items WHERE work_order_id = $1', [id]);
       for (let it of items.rows) {
-        const itemInfo = await db.query('SELECT category FROM inventory_items WHERE id = $1', [it.item_id]);
+        // Busca o nome da peça
+        const itemInfo = await db.query('SELECT name, category FROM inventory_items WHERE id = $1', [it.item_id]);
         await db.query('UPDATE inventory_items SET virtual_stock = virtual_stock - $1 WHERE id = $2', [it.quantity, it.item_id]);
         await recordMovement(it.item_id, -it.quantity, 'virtual', itemInfo.rows[0]?.category);
+        
+        // ⚓ LOG INDIVIDUAL (Reserva)
+        await saveLog(`RESERVA VIRTUAL: ${it.quantity} un. de ${itemInfo.rows[0].name} | OS-${id} (${orderName})`, 'MOVIMENTACAO', req.username);
       }
-      await saveLog(`Separação Concluída: Materiais reservados para a OS-${id}.`, 'OPERACAO', req.username);  
+      await saveLog(`Status OS-${id} alterado para SEPARADO.`, 'OPERACAO', req.username);  
     } 
     else if (currentStatus === 'separado' && status === 'pendente') {
         const items = await db.query('SELECT item_id, quantity FROM work_order_items WHERE work_order_id = $1', [id]);
         for (let it of items.rows) {
-          const itemInfo = await db.query('SELECT category FROM inventory_items WHERE id = $1', [it.item_id]);
+          const itemInfo = await db.query('SELECT name, category FROM inventory_items WHERE id = $1', [it.item_id]);
           await db.query('UPDATE inventory_items SET virtual_stock = virtual_stock + $1 WHERE id = $2', [it.quantity, it.item_id]);
           await recordMovement(it.item_id, it.quantity, 'virtual_estorno', itemInfo.rows[0]?.category); 
+          
+          // ⚓ LOG INDIVIDUAL (Estorno Virtual)
+          await saveLog(`ESTORNO VIRTUAL: ${it.quantity} un. de ${itemInfo.rows[0].name} | OS-${id} (${orderName})`, 'MOVIMENTACAO', req.username);
         }
-      await saveLog(`Estorno Virtual: OS-${id} voltou para PENDENTE.`, 'OPERACAO', req.username);
+      await saveLog(`Status OS-${id} alterado para PENDENTE.`, 'OPERACAO', req.username);
     }
     else if (currentStatus === 'separado' && status === 'entregue') {
         const items = await db.query('SELECT item_id, quantity FROM work_order_items WHERE work_order_id = $1', [id]);
         for (let it of items.rows) {
-          const itemInfo = await db.query('SELECT category FROM inventory_items WHERE id = $1', [it.item_id]);
+          const itemInfo = await db.query('SELECT name, category FROM inventory_items WHERE id = $1', [it.item_id]);
           await db.query('UPDATE inventory_items SET physical_stock = physical_stock - $1 WHERE id = $2', [it.quantity, it.item_id]);
           await recordMovement(it.item_id, -it.quantity, 'fisico', itemInfo.rows[0]?.category); 
+          
+          // ⚓ LOG INDIVIDUAL (Saída Física Real)
+          await saveLog(`SAÍDA FÍSICA: ${it.quantity} un. de ${itemInfo.rows[0].name} | Motivo: OS-${id} (${orderName})`, 'MOVIMENTACAO', req.username);
         }
-        await saveLog(`Entrega Confirmada: Itens da OS-${id} saíram do estoque físico.`, 'OPERACAO', req.username);
+        await saveLog(`Entrega Confirmada: OS-${id} concluída.`, 'OPERACAO', req.username);
     }
-    // ⚓ NOVA LÓGICA: Estorno de Entrega Completa (Volta para Pendente)
     else if (currentStatus === 'entregue' && status === 'pendente') {
         const items = await db.query('SELECT item_id, quantity FROM work_order_items WHERE work_order_id = $1', [id]);
         for (let it of items.rows) {
-          const itemInfo = await db.query('SELECT category FROM inventory_items WHERE id = $1', [it.item_id]);
+          const itemInfo = await db.query('SELECT name, category FROM inventory_items WHERE id = $1', [it.item_id]);
           
-          // ⚓ CORREÇÃO: Devolve as quantidades tanto para o FÍSICO quanto para o VIRTUAL ao mesmo tempo
           await db.query(
             'UPDATE inventory_items SET physical_stock = physical_stock + $1, virtual_stock = virtual_stock + $1 WHERE id = $2', 
             [it.quantity, it.item_id]
           );
           
-          // Registra as entradas compensatórias
           await recordMovement(it.item_id, it.quantity, 'fisico_estorno', itemInfo.rows[0]?.category); 
           await recordMovement(it.item_id, it.quantity, 'virtual_estorno', itemInfo.rows[0]?.category); 
+          
+          // ⚓ LOG INDIVIDUAL (Devolução do Estorno)
+          await saveLog(`DEVOLUÇÃO AO ESTOQUE: ${it.quantity} un. de ${itemInfo.rows[0].name} | Estorno OS-${id} (${orderName})`, 'MOVIMENTACAO', req.username);
         }
-        await saveLog(`ESTORNO DE ENTREGA: Itens da OS-${id} retornaram ao físico e virtual. Ordem pendente.`, 'OPERACAO', req.username);
+        await saveLog(`ESTORNO DE ENTREGA: OS-${id} retornou para PENDENTE.`, 'OPERACAO', req.username);
     }
     
     await db.query('UPDATE work_orders SET status = $1 WHERE id = $2', [status, id]);
